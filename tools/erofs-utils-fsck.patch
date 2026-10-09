@@ -1,0 +1,33 @@
+diff --git a/fsck/main.c b/fsck/main.c
+index b2d8f1a..8e7faac 100644
+--- a/fsck/main.c
++++ b/fsck/main.c
+@@ -477,12 +477,28 @@ static int erofsfsck_dump_xattrs(struct erofs_inode *inode)
+ 			free(value);
+ 			break;
+ 		}
++		/* one-ui-port: security.capability is dropped by chown; log it to re-apply later */
++		if (fsckcfg.extract_path && !strcmp(key, "security.capability")) {
++			FILE *cf = getenv("EROFS_CAPS_LOG") ? fopen(getenv("EROFS_CAPS_LOG"), "a") : NULL;
++			if (cf) {
++				fprintf(cf, "%s\t", fsckcfg.extract_path);
++				for (unsigned int ci = 0; ci < size; ci++)
++					fprintf(cf, "%02x", ((unsigned char *)value)[ci]);
++				fprintf(cf, "\n");
++				fclose(cf);
++			}
++		}
+ 		if (fsckcfg.extract_path)
+ 			ret = erofs_sys_lsetxattr(fsckcfg.extract_path, key,
+ 						  value, size);
+ 		else
+ 			ret = 0;
+ 		free(value);
++		/* one-ui-port: security.selinux cannot be set inside a user namespace; relabelled from file_contexts later */
++		if (ret == -EPERM && !strcmp(key, "security.selinux")) {
++			ret = 0;
++			continue;
++		}
+ 		if (ret == -EPERM && !fsckcfg.superuser) {
+ 			if (__erofs_unlikely(!erofs_xattr_prefix_matches(key,
+ 					&index, &len))) {

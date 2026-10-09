@@ -1,0 +1,556 @@
+diff -ruN a/smali/com/android/server/health/HealthRegCallbackAidl.smali b/smali/com/android/server/health/HealthRegCallbackAidl.smali
+--- a/smali/com/android/server/health/HealthRegCallbackAidl.smali
++++ b/smali/com/android/server/health/HealthRegCallbackAidl.smali
+@@ -125,6 +125,15 @@
+ .method public onRegistration(Lvendor/samsung/hardware/health/ISehHealth;Lvendor/samsung/hardware/health/ISehHealth;)V
+     .locals 5
+ 
++    # one-ui-port: no ISehHealth (Samsung vendor HAL): skip registering; battery info comes from the AOSP IHealth
++    if-nez p2, :oneui_seh_ok
++    const-string v0, "HealthRegCallbackAidl"
++    const-string v1, "one-ui-port: ISehHealth yok, registerCallback atlandi"
++    invoke-static {v0, v1}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;)I
++    return-void
++
++    :oneui_seh_ok
++
+     .line 1
+     iget-object v0, p0, Lcom/android/server/health/HealthRegCallbackAidl;->mHalInfoCallback:Lcom/android/server/health/HealthRegCallbackAidl$HalInfoCallback;
+ 
+diff -ruN a/smali/com/android/server/health/KleeAospHealthCallback.smali b/smali/com/android/server/health/KleeAospHealthCallback.smali
+--- a/smali/com/android/server/health/KleeAospHealthCallback.smali
++++ b/smali/com/android/server/health/KleeAospHealthCallback.smali
+@@ -0,0 +1,205 @@
++.class public final Lcom/android/server/health/KleeAospHealthCallback;
++.super Landroid/os/Binder;
++.source "KleeAospHealthCallback.java"
++
++# one-ui-port: the Xiaomi vendor has no Samsung ISehHealth extension, so
++# BatteryService never got any battery info. This registers as an
++# IHealthInfoCallback with the AOSP android.hardware.health.IHealth HAL, wraps the
++# HealthInfo it receives in a SehHealthInfo and hands it to Samsung's normal path
++# (mServiceInfoCallback.update).
++
++
++# static fields
++.field public static sInstance:Lcom/android/server/health/KleeAospHealthCallback;
++
++
++# instance fields
++.field public final mOuter:Lcom/android/server/health/HealthRegCallbackAidl;
++
++
++# direct methods
++.method public constructor <init>(Lcom/android/server/health/HealthRegCallbackAidl;)V
++    .locals 0
++
++    invoke-direct {p0}, Landroid/os/Binder;-><init>()V
++
++    iput-object p1, p0, Lcom/android/server/health/KleeAospHealthCallback;->mOuter:Lcom/android/server/health/HealthRegCallbackAidl;
++
++    invoke-virtual {p0}, Landroid/os/Binder;->markVintfStability()V
++
++    return-void
++.end method
++
++# Call IHealth transaction <code>, with no argument or with a callback binder
++.method private static call(Landroid/os/IBinder;ILandroid/os/IBinder;)V
++    .locals 4
++
++    invoke-static {}, Landroid/os/Parcel;->obtain()Landroid/os/Parcel;
++
++    move-result-object v0
++
++    invoke-static {}, Landroid/os/Parcel;->obtain()Landroid/os/Parcel;
++
++    move-result-object v1
++
++    :try_start
++    const-string v2, "android.hardware.health.IHealth"
++
++    invoke-virtual {v0, v2}, Landroid/os/Parcel;->writeInterfaceToken(Ljava/lang/String;)V
++
++    if-eqz p2, :no_arg
++
++    invoke-virtual {v0, p2}, Landroid/os/Parcel;->writeStrongBinder(Landroid/os/IBinder;)V
++
++    :no_arg
++    const/4 v3, 0x0
++
++    invoke-interface {p0, p1, v0, v1, v3}, Landroid/os/IBinder;->transact(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z
++
++    invoke-virtual {v1}, Landroid/os/Parcel;->readException()V
++    :try_end
++    .catchall {:try_start .. :try_end} :finally
++
++    invoke-virtual {v0}, Landroid/os/Parcel;->recycle()V
++
++    invoke-virtual {v1}, Landroid/os/Parcel;->recycle()V
++
++    return-void
++
++    :finally
++    move-exception v2
++
++    invoke-virtual {v0}, Landroid/os/Parcel;->recycle()V
++
++    invoke-virtual {v1}, Landroid/os/Parcel;->recycle()V
++
++    throw v2
++.end method
++
++.method public static register(Lcom/android/server/health/HealthRegCallbackAidl;)V
++    .locals 4
++
++    const-string v3, "HealthRegCallbackAidl"
++
++    :try_start
++    const-string v0, "android.hardware.health.IHealth/default"
++
++    invoke-static {v0}, Landroid/os/ServiceManager;->waitForDeclaredService(Ljava/lang/String;)Landroid/os/IBinder;
++
++    move-result-object v0
++
++    if-nez v0, :have_hal
++
++    const-string v1, "one-ui-port: AOSP IHealth da yok, pil bilgisi gelmeyecek"
++
++    invoke-static {v3, v1}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;)I
++
++    return-void
++
++    :have_hal
++    new-instance v1, Lcom/android/server/health/KleeAospHealthCallback;
++
++    invoke-direct {v1, p0}, Lcom/android/server/health/KleeAospHealthCallback;-><init>(Lcom/android/server/health/HealthRegCallbackAidl;)V
++
++    sput-object v1, Lcom/android/server/health/KleeAospHealthCallback;->sInstance:Lcom/android/server/health/KleeAospHealthCallback;
++
++    # registerCallback(IHealthInfoCallback) = 1
++    const/4 v2, 0x1
++
++    invoke-static {v0, v2, v1}, Lcom/android/server/health/KleeAospHealthCallback;->call(Landroid/os/IBinder;ILandroid/os/IBinder;)V
++
++    # update() = 3
++    const/4 v2, 0x3
++
++    const/4 v1, 0x0
++
++    invoke-static {v0, v2, v1}, Lcom/android/server/health/KleeAospHealthCallback;->call(Landroid/os/IBinder;ILandroid/os/IBinder;)V
++
++    const-string v1, "one-ui-port: AOSP IHealth callback kaydedildi"
++
++    invoke-static {v3, v1}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end
++    .catch Ljava/lang/Throwable; {:try_start .. :try_end} :catch
++
++    return-void
++
++    :catch
++    move-exception v0
++
++    const-string v1, "one-ui-port: AOSP IHealth callback kaydedilemedi"
++
++    invoke-static {v3, v1, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    return-void
++.end method
++
++
++# virtual methods
++.method public final onTransact(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z
++    .locals 4
++
++    const-string v0, "android.hardware.health.IHealthInfoCallback"
++
++    const/4 v3, 0x1
++
++    const v1, 0x5f4e5446
++
++    if-ne p1, v1, :not_iface
++
++    invoke-virtual {p3, v0}, Landroid/os/Parcel;->writeString(Ljava/lang/String;)V
++
++    return v3
++
++    :not_iface
++    const v1, 0xffffff
++
++    if-ne p1, v1, :not_version
++
++    invoke-virtual {p3}, Landroid/os/Parcel;->writeNoException()V
++
++    const/4 v1, 0x3
++
++    invoke-virtual {p3, v1}, Landroid/os/Parcel;->writeInt(I)V
++
++    return v3
++
++    :not_version
++    # healthInfoChanged(HealthInfo) = 1
++    if-eq p1, v3, :changed
++
++    invoke-super {p0, p1, p2, p3, p4}, Landroid/os/Binder;->onTransact(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z
++
++    move-result v0
++
++    return v0
++
++    :changed
++    invoke-virtual {p2, v0}, Landroid/os/Parcel;->enforceInterface(Ljava/lang/String;)V
++
++    sget-object v1, Landroid/hardware/health/HealthInfo;->CREATOR:Landroid/os/Parcelable$Creator;
++
++    invoke-virtual {p2, v1}, Landroid/os/Parcel;->readTypedObject(Landroid/os/Parcelable$Creator;)Ljava/lang/Object;
++
++    move-result-object v1
++
++    check-cast v1, Landroid/hardware/health/HealthInfo;
++
++    if-eqz v1, :done
++
++    new-instance v2, Lvendor/samsung/hardware/health/SehHealthInfo;
++
++    invoke-direct {v2}, Lvendor/samsung/hardware/health/SehHealthInfo;-><init>()V
++
++    iput-object v1, v2, Lvendor/samsung/hardware/health/SehHealthInfo;->aospHealthInfo:Landroid/hardware/health/HealthInfo;
++
++    iget-object v1, p0, Lcom/android/server/health/KleeAospHealthCallback;->mOuter:Lcom/android/server/health/HealthRegCallbackAidl;
++
++    iget-object v1, v1, Lcom/android/server/health/HealthRegCallbackAidl;->mServiceInfoCallback:Lcom/android/server/BatteryService$$ExternalSyntheticLambda10;
++
++    if-eqz v1, :done
++
++    invoke-virtual {v1, v2}, Lcom/android/server/BatteryService$$ExternalSyntheticLambda10;->update(Lvendor/samsung/hardware/health/SehHealthInfo;)V
++
++    :done
++    return v3
++.end method
+diff -ruN a/smali_classes2/com/android/server/vibrator/VibratorController$NativeWrapper.smali b/smali_classes2/com/android/server/vibrator/VibratorController$NativeWrapper.smali
+--- a/smali_classes2/com/android/server/vibrator/VibratorController$NativeWrapper.smali
++++ b/smali_classes2/com/android/server/vibrator/VibratorController$NativeWrapper.smali
+@@ -250,14 +250,12 @@
+ .method public final getAmplitudeList(I)[I
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    # one-ui-port: no Samsung vibrator extension, no-op
++    const/4 v0, 0x0
+ 
+-    invoke-static {v0, v1, p1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->getAmplitudeList(JI)[I
++    new-array v0, v0, [I
+ 
+-    move-result-object p0
+-
+-    return-object p0
++    return-object v0
+ .end method
+ 
+ .method public final getInfo(Landroid/os/VibratorInfo$Builder;)Z
+@@ -274,29 +272,21 @@
+ .end method
+ 
+ .method public final getNumberOfPrebakedHapticPattern()I
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->getNumberOfPrebakedHapticPattern(J)I
++    .locals 1
+ 
+-    move-result p0
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final hasFeature(Ljava/lang/String;)Z
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->hasFeature(JLjava/lang/String;)Z
+-
+-    move-result p0
++    # one-ui-port: no Samsung vibrator extension, no-op
++    const/4 v0, 0x0
+ 
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final init(ILcom/android/server/vibrator/HalVibrator$Callbacks;)V
+@@ -433,39 +423,21 @@
+ .method public final performCommonInputff([IZI)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1, p2, p3}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->performCommonInputff(J[IZI)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final performHapticEngine([II)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1, p2}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->performHapticEngine(J[II)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final performPrebakedHapticPattern(JJZ)V
+-    .locals 7
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    move-wide v2, p1
+-
+-    move-wide v4, p3
+-
+-    move v6, p5
+-
+-    invoke-static/range {v0 .. v6}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->performPrebakedHapticPattern(JJJZ)V
++    .locals 2
+ 
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+@@ -495,24 +467,12 @@
+ .end method
+ 
+ .method public final sehPerformEffect(JJLcom/android/server/vibrator/Vibration;Z)J
+-    .locals 8
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    move-wide v2, p1
+-
+-    move-wide v4, p3
+-
+-    move-object v6, p5
+-
+-    move v7, p6
+-
+-    invoke-static/range {v0 .. v7}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->sehPerformEffect(JJJLcom/android/server/vibrator/Vibration;Z)J
++    .locals 2
+ 
+-    move-result-wide p0
++    # one-ui-port: no Samsung vibrator extension, no-op
++    const-wide/16 v0, 0x0
+ 
+-    return-wide p0
++    return-wide v0
+ .end method
+ 
+ .method public final setAmplitude(F)V
+@@ -540,158 +500,106 @@
+ .method public final setFoldState(Z)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->setFoldState(JZ)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final setForceTouchAmplitude(J)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1, p2}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->setForceTouchAmplitude(JJ)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final setFrequencyType(J)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1, p2}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->setFrequencyType(JJ)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final setIntensity(J)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1, p2}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->setIntensity(JJ)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final setTentState(Z)V
+     .locals 2
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1, p1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->setTentState(JZ)V
+-
++    # one-ui-port: no Samsung vibrator extension, no-op
+     return-void
+ .end method
+ 
+ .method public final supportIntensityControl()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    .locals 1
+ 
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportIntensityControl(J)Z
+-
+-    move-result p0
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsEnhancedSamsungHapticPattern()Z
+-    .locals 2
++    .locals 1
+ 
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsEnhancedSamsungHapticPattern(J)Z
+-
+-    move-result p0
+-
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsFoldState()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    .locals 1
+ 
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsFoldState(J)Z
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    move-result p0
+-
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsFrequencyControl()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    .locals 1
+ 
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsFrequencyControl(J)Z
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    move-result p0
+-
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsHapticEngine()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsHapticEngine(J)Z
++    .locals 1
+ 
+-    move-result p0
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsHasFeature()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    .locals 1
+ 
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsHasFeature(J)Z
+-
+-    move-result p0
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsPrebakedHapticPattern()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
+-
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsPrebakedHapticPattern(J)Z
++    .locals 1
+ 
+-    move-result p0
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    return p0
++    return v0
+ .end method
+ 
+ .method public final supportsTentState()Z
+-    .locals 2
+-
+-    .line 1
+-    iget-wide v0, p0, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->mNativePtr:J
++    .locals 1
+ 
+-    invoke-static {v0, v1}, Lcom/android/server/vibrator/VibratorController$NativeWrapper;->supportsTentState(J)Z
++    # one-ui-port: the Samsung vibrator HAL extension (getExtension) does not exist on Xiaomi -> the native call crashes on null
++    const/4 v0, 0x0
+ 
+-    move-result p0
+-
+-    return p0
++    return v0
+ .end method

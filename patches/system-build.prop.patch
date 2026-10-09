@@ -1,0 +1,16 @@
+--- a/system/build.prop
++++ b/system/build.prop
+@@ -121,11 +121,11 @@
+ ro.postinstall.fstab.prefix=/system
+ ro.secure=1
+ security.perf_harden=1
+-ro.adb.secure=1
++ro.adb.secure=0
+ ro.allow.mock.location=0
+ dalvik.vm.lockprof.threshold=500
+ ro.binary.type=user
+-ro.debuggable=0
++ro.debuggable=1
+ net.bt.name=Android
+ ro.build.selinux=1
+ ro.force.debuggable=0

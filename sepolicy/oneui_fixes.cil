@@ -1,0 +1,7 @@
+; one-ui-port: socket labels defined by the Samsung vendor but missing on the Xiaomi vendor
+(type napproxyd_socket)
+(roletype object_r napproxyd_socket)
+(typeattributeset file_type (napproxyd_socket))
+(allow init napproxyd_socket (sock_file (create setattr unlink getattr relabelto)))
+(allow netd napproxyd_socket (sock_file (read write getattr)))
+(allow system_server napproxyd_socket (sock_file (write getattr)))

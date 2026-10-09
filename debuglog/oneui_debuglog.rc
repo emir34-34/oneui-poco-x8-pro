@@ -1,0 +1,9 @@
+service oneui_debuglog /system/bin/sh /system/bin/oneui_debuglog.sh
+    user root
+    group root log readproc
+    seclabel u:r:oneuidbg:s0
+    disabled
+    oneshot
+
+on post-fs-data
+    start oneui_debuglog

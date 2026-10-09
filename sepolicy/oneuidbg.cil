@@ -1,0 +1,6 @@
+; one-ui-port debug domain: only the oneui_debuglog service, permissive
+(type oneuidbg)
+(roletype r oneuidbg)
+(typeattributeset domain (oneuidbg))
+(typepermissive oneuidbg)
+(allow init oneuidbg (process (transition rlimitinh siginh noatsecure)))
