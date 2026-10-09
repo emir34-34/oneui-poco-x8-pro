@@ -66,6 +66,15 @@ remaining problems are Samsung-specific.
 | `docs/screenshots/`, `docs/banner.png` | photo of the device booting One UI, banner |
 | `docs/NOTES.md` | **everything learned so far, how to rebuild the image, and what to do next** |
 
+## Banners
+
+The banner at the top was made with ChatGPT from the photo of the real device. Two
+alternatives, free to use for posts about the project:
+
+| `docs/banner2.jpg` (Gemini) | `docs/banner3.png` (hand-made from the photo) |
+|---|---|
+| ![Banner 2](docs/banner2.jpg) | ![Banner 3](docs/banner3.png) |
+
 ## Credits
 
 Samsung firmware download: [samloader-rs](https://github.com/topjohnwu/samloader-rs). Tools:
