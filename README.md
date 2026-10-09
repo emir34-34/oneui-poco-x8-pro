@@ -1,3 +1,5 @@
+![One UI 8.5 on Poco X8 Pro](docs/banner.png)
+
 # One UI 8.5 on the Poco X8 Pro (klee, MT6899) — experimental DSU port
 
 This is an attempt to run Samsung's One UI 8.5 (Android 16) system on the Xiaomi Poco X8 Pro
@@ -19,6 +21,12 @@ any kind (GPL-2.0, sections 11 and 12).
 
 This repository contains **no Samsung or Xiaomi files**, only patches, scripts and notes. You
 need to download the firmware yourself.
+
+## Screenshot
+
+<img src="docs/screenshots/boot-logo.jpg" alt="Poco X8 Pro showing the Samsung Galaxy boot logo" width="300">
+
+*The Poco X8 Pro booting the One UI DSU image (photo of the real device).*
 
 ## How far it got
 
@@ -55,6 +63,7 @@ remaining problems are Samsung-specific.
 | `tools/secil_test_pc.sh`, `tools/secil_test_device.sh` | emulate init's split-policy compilation (PC / on the phone) |
 | `tools/erofs-utils-fsck.patch` | lets `fsck.erofs --extract` run in a user namespace (no root) and log file capabilities |
 | `tools/resolve.py` | resolves the libraries the audio service needs against the One UI root |
+| `docs/screenshots/`, `docs/banner.png` | photo of the device booting One UI, banner |
 | `docs/NOTES.md` | **everything learned so far, how to rebuild the image, and what to do next** |
 
 ## Credits
