@@ -1,7 +1,6 @@
 # One UI 9 on klee — notes (2026-11-08 → 2026-11-12)
 
-Second attempt, after the One UI 8.5 notes in [`../docs/NOTES.md`](../docs/NOTES.md).
-Still a **DSU** image: the installed ROM (Infinity X, Android 17, slot `_b`) is never touched,
+A **DSU** image: the installed ROM (Infinity X, Android 17, slot `_b`) is never touched,
 and nothing is written outside `/data/gsi` and `/data/local/tmp`.
 
 ## Base

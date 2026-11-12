@@ -1,26 +1,19 @@
-![One UI on Poco X8 Pro](docs/banner.png)
+![One UI 9 on Poco X8 Pro](docs/banner.png)
 
-# One UI on the Poco X8 Pro (klee, MT6899) — experimental DSU port
+# One UI 9 on the Poco X8 Pro (klee, MT6899) — experimental DSU port
 
-An attempt to run Samsung's One UI system on the Xiaomi Poco X8 Pro (codename `klee`, MediaTek
+An attempt to run Samsung's One UI 9 system on the Xiaomi Poco X8 Pro (codename `klee`, MediaTek
 mt6899), on top of the phone's own Xiaomi vendor. The system is booted as a **DSU** (Dynamic System
 Update) image, so the installed ROM and `/data` are never touched. If a test boot fails, the phone
 falls back to the normal ROM by itself.
 
-> **Status (2026-11-12): One UI 9 boots and is usable for testing, not for daily use.**
-> Working: S26 Ultra lock screen and notification panel, PIN lock, in-display fingerprint with
-> Samsung's unlock animation, Always On Display, Wi-Fi, Google/Samsung sign-in, fast boot.
-> Not working: SMS, VoLTE, SIM manager, adaptive brightness, Theme Store, Gallery AI.
-> Not tested: camera, Bluetooth, GPS, calls, mobile data.
-> **Everything about One UI 9 is in [`oneui9/`](oneui9/) — start with [`oneui9/NOTES.md`](oneui9/NOTES.md).**
->
-> The rest of this page describes the first attempt, One UI 8.5 (paused 2026-10-08, never reached
-> the UI). Sister project: [Ubuntu Touch for the Poco X8 Pro](https://github.com/emir34-34/ubuntu-touch-poco-x8-pro).
+> **Status (2026-11-12): boots and is usable for testing, not for daily use.**
+> Sister project: [Ubuntu Touch for the Poco X8 Pro](https://github.com/emir34-34/ubuntu-touch-poco-x8-pro).
 
 ## Disclaimer
 
 **Use this at your own risk.** This is an experimental, unfinished port. Even though DSU leaves
-the installed system alone, failed boots put the phone into a preloader/BROM loop for about two
+the installed system alone, failed boots can put the phone into a preloader/BROM loop for a few
 minutes before it recovers. The author takes **no responsibility** for any damage to your device
 or data, and gives **no support** for individual attempts. Provided "as is", without warranty of
 any kind (GPL-2.0, sections 11 and 12).
@@ -28,50 +21,58 @@ any kind (GPL-2.0, sections 11 and 12).
 This repository contains **no Samsung or Xiaomi files**, only patches, scripts and notes. You
 need to download the firmware yourself.
 
-## Screenshot
+## Status
 
-<img src="docs/screenshots/boot-logo.jpg" alt="Poco X8 Pro showing the Samsung Galaxy boot logo" width="300">
-
-*The Poco X8 Pro booting the One UI DSU image (photo of the real device).*
-
-## One UI 8.5: how far it got
-
-| Step | Status |
+| Area | Status |
 |---|---|
-| Samsung sepolicy compiles against the Xiaomi vendor policy | ✅ (`tools/secil_test_pc.sh`) |
-| DSU image accepted (AVB hashtree footer, `skip_mount.cfg`, Samsung layout) | ✅ |
-| `init`, `zygote` start | ✅ after the `napproxyd` socket label fix |
-| `system_server` survives the vibrator service | ✅ (Samsung vibrator extension calls stubbed) |
-| AudioPolicy loads | ✅ (Xiaomi's `audio.parameter_parser` service added) |
-| `JobSchedulerService` / battery info | ❌ **current blocker**: `BatteryService` gets no `HealthInfo` |
-| UI, USB/adb in One UI | ❌ not reached / USB does not work |
+| Boot, Galaxy S26 Ultra lock screen and notification panel, ADB | ✅ |
+| Boot time | ✅ screen at ~50–63 s |
+| PIN lock | ✅ |
+| In-display fingerprint (enrol, unlock) | ✅ |
+| Samsung fingerprint unlock animation (Good Lock / LockStar) | ✅ |
+| Always On Display | ✅ |
+| Wi-Fi, Google and Samsung sign-in | ✅ |
+| Fast charging | ✅ ~35–55 W |
+| Lock screen elements around the sensor | 🟡 icon size being tuned |
+| Adaptive brightness | ❌ light sensor reports an almost constant value |
+| SMS, VoLTE, SIM manager | ❌ |
+| Theme Store, Gallery AI editing | ❌ |
+| Camera, Bluetooth, GPS, calls, mobile data | not tested |
 
-The fix for the current blocker is written (`KleeAospHealthCallback` in
-`patches/services.jar.patch`), but **not hooked up and never tested**. See
-[docs/NOTES.md](docs/NOTES.md#current-blocker-battery-info).
+How each fix works is in **[NOTES.md](NOTES.md)**.
 
-Before this, a stock **Google Android 17 GSI** booted fine as a DSU on the same phone, with
-cameras, earpiece, audio and vibration working. The vendor is Treble-compatible, and the
-remaining problems are Samsung-specific.
+## Base
+
+- System: Galaxy A06 5G (SM-A066B) One UI 9, with SystemUI, AODService and Galaxy AI apps from
+  the Galaxy S26 Ultra.
+- Kernel, vendor, odm: from the phone (Infinity X, Android 17, vendor API 202604).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
-| `oneui9/` | **One UI 9**: notes, DSU install/test scripts, add-on module loader, `klee_fpfs`, framework overlay source, smali patches |
-| `patches/services.jar.patch` | smali patch for `/system/framework/services.jar`: health callback, vibrator stubs, and the new `KleeAospHealthCallback` class |
-| `patches/system-build.prop.patch` | `ro.debuggable=1`, `ro.adb.secure=0`, `persist.sys.usb.config=mtp,adb` |
-| `patches/plat_file_contexts.patch` | label for `/dev/socket/napproxyd` |
-| `patches/skip_mount.cfg` | from the AOSP GSI; put it in `/system/etc/init/config/` and `/system_ext/etc/init/config/` |
-| `patches/android.hardware.audio.parameter_parser.service.rc` | init script of the Xiaomi audio service to copy from the stock/Axion `system_ext` |
-| `sepolicy/` | CIL appended to `plat_sepolicy.cil`: the `napproxyd_socket` type and the permissive `oneuidbg` debug domain |
-| `debuglog/` | debug service that dumps logcat/dmesg to `/metadata/oneui_debug` during the boot (USB does not work in One UI) |
-| `tools/build_oneui.sh` | repacks `services.jar`, builds the EROFS image with the AVB footer, optionally installs it via `gsi_tool` |
-| `tools/secil_test_pc.sh`, `tools/secil_test_device.sh` | emulate init's split-policy compilation (PC / on the phone) |
-| `tools/erofs-utils-fsck.patch` | lets `fsck.erofs --extract` run in a user namespace (no root) and log file capabilities |
-| `tools/resolve.py` | resolves the libraries the audio service needs against the One UI root |
-| `docs/screenshots/`, `docs/banner.png` | photo of the device booting One UI, banner |
-| `docs/NOTES.md` | **everything learned so far, how to rebuild the image, and what to do next** |
+| `NOTES.md` | everything learned: the fixes, why they are needed, the test loop |
+| `tools/build_image.sh` | builds the EROFS `system.img` with the AVB hashtree footer |
+| `tools/dsu_cycle.sh`, `tools/auto_install.sh` | install the image as DSU (32 GiB userdata), skip setup, collect a diagnosis |
+| `tools/diag_oneui.sh` | read-only diagnosis (logcat, dumpsys, props) while One UI runs |
+| `tools/build_module.sh`, `tools/push_module.sh` | build and push a small add-on module instead of a new 6 GB image |
+| `tools/kleemod/klee_modmount.{sh,rc}` | module loader: overlayfs mounts before zygote, skips a module that broke the boot |
+| `tools/kleemod/klee_fpfs.c` | adds `/sys/class/fingerprint/fingerprint/position`, which Samsung's lock screen and AOD read |
+| `tools/build_services_mod.sh` | rebuilds `services.jar` / `secinputdev-service.jar` from smali, replacing only the dex files |
+| `patches/` | smali diffs against the stock One UI 9 `services.jar` and `secinputdev-service.jar` |
+| `overlay/KleeFramework/` | framework overlay source: brightness curve, AOD brightness, hysteresis |
+| `module-example/` | an example module (`mod.list`, `mod.prop`, root helper script) |
+| `sepolicy/oneuidbg.cil` | the permissive debug domain used by the development tools |
+| `docs/` | banners and a photo of the device |
+
+The loader, `klee_fpfs`, the debug domain and the helper scripts are **development tools** and are
+meant to be removed before any permanent install.
+
+## Screenshot
+
+<img src="docs/screenshots/boot-logo.jpg" alt="Poco X8 Pro showing the Samsung Galaxy boot logo" width="300">
+
+*The Poco X8 Pro booting the One UI DSU image (photo of the real device).*
 
 ## Banners
 
