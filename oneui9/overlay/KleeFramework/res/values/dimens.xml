@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- klee: AOD parlakligi; displayconfig haritasi 0.00085=2 nit, 0.5=600 nit -> ~8 nit (onceki 0.06667 ~80 nit) -->
+    <item name="config_screenBrightnessDozeFloat" format="float" type="dimen">0.0067</item>
+    <!-- o9-39'da physical_power_button_center_screen_location_y=1250px (LightReveal) denendi: AOD'de on scrim alpha=1 kaldi, saat gorunmedi. Geri alindi. -->
+</resources>

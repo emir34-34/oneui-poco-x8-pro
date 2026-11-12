@@ -1,15 +1,21 @@
-![One UI 8.5 on Poco X8 Pro](docs/banner.png)
+![One UI on Poco X8 Pro](docs/banner.png)
 
-# One UI 8.5 on the Poco X8 Pro (klee, MT6899) — experimental DSU port
+# One UI on the Poco X8 Pro (klee, MT6899) — experimental DSU port
 
-This is an attempt to run Samsung's One UI 8.5 (Android 16) system on the Xiaomi Poco X8 Pro
-(codename `klee`, MediaTek mt6899), on top of the phone's own Xiaomi vendor. The system is booted
-as a **DSU** (Dynamic System Update) image, so the installed ROM and `/data` are never touched.
-If a test boot fails, the phone falls back to the normal ROM by itself.
+An attempt to run Samsung's One UI system on the Xiaomi Poco X8 Pro (codename `klee`, MediaTek
+mt6899), on top of the phone's own Xiaomi vendor. The system is booted as a **DSU** (Dynamic System
+Update) image, so the installed ROM and `/data` are never touched. If a test boot fails, the phone
+falls back to the normal ROM by itself.
 
-> **Status: unfinished, paused (2026-10-08).** One UI gets as far as `system_server` but does not
-> reach the UI yet. Everything learned so far is published here so that others can continue.
-> Sister project: [Ubuntu Touch for the Poco X8 Pro](https://github.com/emir34-34/ubuntu-touch-poco-x8-pro).
+> **Status (2026-11-12): One UI 9 boots and is usable for testing, not for daily use.**
+> Working: S26 Ultra lock screen and notification panel, PIN lock, in-display fingerprint with
+> Samsung's unlock animation, Always On Display, Wi-Fi, Google/Samsung sign-in, fast boot.
+> Not working: SMS, VoLTE, SIM manager, adaptive brightness, Theme Store, Gallery AI.
+> Not tested: camera, Bluetooth, GPS, calls, mobile data.
+> **Everything about One UI 9 is in [`oneui9/`](oneui9/) — start with [`oneui9/NOTES.md`](oneui9/NOTES.md).**
+>
+> The rest of this page describes the first attempt, One UI 8.5 (paused 2026-10-08, never reached
+> the UI). Sister project: [Ubuntu Touch for the Poco X8 Pro](https://github.com/emir34-34/ubuntu-touch-poco-x8-pro).
 
 ## Disclaimer
 
@@ -28,7 +34,7 @@ need to download the firmware yourself.
 
 *The Poco X8 Pro booting the One UI DSU image (photo of the real device).*
 
-## How far it got
+## One UI 8.5: how far it got
 
 | Step | Status |
 |---|---|
@@ -52,6 +58,7 @@ remaining problems are Samsung-specific.
 
 | Path | Contents |
 |---|---|
+| `oneui9/` | **One UI 9**: notes, DSU install/test scripts, add-on module loader, `klee_fpfs`, framework overlay source, smali patches |
 | `patches/services.jar.patch` | smali patch for `/system/framework/services.jar`: health callback, vibrator stubs, and the new `KleeAospHealthCallback` class |
 | `patches/system-build.prop.patch` | `ro.debuggable=1`, `ro.adb.secure=0`, `persist.sys.usb.config=mtp,adb` |
 | `patches/plat_file_contexts.patch` | label for `/dev/socket/napproxyd` |

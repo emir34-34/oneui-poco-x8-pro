@@ -1,0 +1,715 @@
+--- a/com/android/server/biometrics/sensors/fingerprint/KleeFodTouch.smali
++++ b/com/android/server/biometrics/sensors/fingerprint/KleeFodTouch.smali
+@@ -0,0 +1,263 @@
++.class public Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;
++.super Landroid/view/InputEventReceiver;
++
++
++# static fields
++.field private static sCur:Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;
++
++.field private static sThread:Landroid/os/HandlerThread;
++
++
++# instance fields
++.field private mClient:Lcom/android/server/biometrics/sensors/fingerprint/Udfps;
++
++.field private mDown:Z
++
++.field private mMon:Landroid/view/InputMonitor;
++
++
++# direct methods
++.method private constructor <init>(Landroid/view/InputChannel;Landroid/os/Looper;Lcom/android/server/biometrics/sensors/fingerprint/Udfps;Landroid/view/InputMonitor;)V
++    .locals 0
++
++    invoke-direct {p0, p1, p2}, Landroid/view/InputEventReceiver;-><init>(Landroid/view/InputChannel;Landroid/os/Looper;)V
++
++    iput-object p3, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mClient:Lcom/android/server/biometrics/sensors/fingerprint/Udfps;
++
++    iput-object p4, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mMon:Landroid/view/InputMonitor;
++
++    return-void
++.end method
++
++.method public static declared-synchronized start(Lcom/android/server/biometrics/sensors/fingerprint/Udfps;)V
++    .locals 5
++
++    :try_start_0
++    invoke-static {}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->stop()V
++
++    sget-object v0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->sThread:Landroid/os/HandlerThread;
++
++    if-nez v0, :cond_0
++
++    new-instance v0, Landroid/os/HandlerThread;
++
++    const-string/jumbo v1, "klee_fod"
++
++    invoke-direct {v0, v1}, Landroid/os/HandlerThread;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Landroid/os/HandlerThread;->start()V
++
++    sput-object v0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->sThread:Landroid/os/HandlerThread;
++
++    :cond_0
++    invoke-static {}, Landroid/hardware/input/InputManagerGlobal;->getInstance()Landroid/hardware/input/InputManagerGlobal;
++
++    move-result-object v1
++
++    const-string/jumbo v2, "klee_fod"
++
++    const/4 v3, 0x0
++
++    invoke-virtual {v1, v2, v3}, Landroid/hardware/input/InputManagerGlobal;->monitorGestureInput(Ljava/lang/String;I)Landroid/view/InputMonitor;
++
++    move-result-object v1
++
++    invoke-virtual {v1}, Landroid/view/InputMonitor;->getInputChannel()Landroid/view/InputChannel;
++
++    move-result-object v2
++
++    invoke-virtual {v0}, Landroid/os/HandlerThread;->getLooper()Landroid/os/Looper;
++
++    move-result-object v3
++
++    new-instance v4, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;
++
++    invoke-direct {v4, v2, v3, p0, v1}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;-><init>(Landroid/view/InputChannel;Landroid/os/Looper;Lcom/android/server/biometrics/sensors/fingerprint/Udfps;Landroid/view/InputMonitor;)V
++
++    sput-object v4, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->sCur:Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;
++
++    const-string v0, "KleeFod"
++
++    const-string/jumbo v1, "started"
++
++    invoke-static {v0, v1}, Landroid/util/Slog;->i(Ljava/lang/String;Ljava/lang/String;)I
++    :try_end_0
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
++
++    return-void
++
++    :catch_0
++    move-exception v0
++
++    const-string v1, "KleeFod"
++
++    const-string/jumbo v2, "start failed"
++
++    invoke-static {v1, v2, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    return-void
++.end method
++
++.method public static declared-synchronized stop()V
++    .locals 2
++
++    :try_start_0
++    sget-object v0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->sCur:Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;
++
++    if-eqz v0, :cond_0
++
++    const/4 v1, 0x0
++
++    sput-object v1, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->sCur:Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;
++
++    invoke-virtual {v0}, Landroid/view/InputEventReceiver;->dispose()V
++
++    iget-object v0, v0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mMon:Landroid/view/InputMonitor;
++
++    invoke-virtual {v0}, Landroid/view/InputMonitor;->dispose()V
++    :try_end_0
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
++
++    :catch_0
++    :cond_0
++    return-void
++.end method
++
++
++# virtual methods
++.method public onInputEvent(Landroid/view/InputEvent;)V
++    .locals 6
++
++    :try_start_0
++    iget-object v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mClient:Lcom/android/server/biometrics/sensors/fingerprint/Udfps;
++
++    check-cast v0, Lcom/android/server/biometrics/sensors/BaseClientMonitor;
++
++    iget-boolean v0, v0, Lcom/android/server/biometrics/sensors/BaseClientMonitor;->mAlreadyDone:Z
++
++    if-nez v0, :cond_2
++
++    instance-of v0, p1, Landroid/view/MotionEvent;
++
++    if-eqz v0, :cond_2
++
++    move-object v0, p1
++
++    check-cast v0, Landroid/view/MotionEvent;
++
++    invoke-virtual {v0}, Landroid/view/MotionEvent;->getActionMasked()I
++
++    move-result v1
++
++    if-nez v1, :cond_0
++
++    invoke-virtual {v0}, Landroid/view/MotionEvent;->getX()F
++
++    move-result v2
++
++    invoke-virtual {v0}, Landroid/view/MotionEvent;->getY()F
++
++    move-result v3
++
++    const v4, 0x43de0000    # 444.0f
++
++    cmpl-float v5, v2, v4
++
++    if-ltz v5, :cond_2
++
++    const v4, 0x444e0000    # 824.0f
++
++    cmpg-float v5, v2, v4
++
++    if-gtz v5, :cond_2
++
++    const v4, 0x450e9000    # 2281.0f
++
++    cmpl-float v5, v3, v4
++
++    if-ltz v5, :cond_2
++
++    const v4, 0x45265000    # 2661.0f
++
++    cmpg-float v5, v3, v4
++
++    if-gtz v5, :cond_2
++
++    const/4 v4, 0x1
++
++    iput-boolean v4, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mDown:Z
++
++    new-instance v4, Landroid/hardware/biometrics/fingerprint/PointerContext;
++
++    invoke-direct {v4}, Landroid/hardware/biometrics/fingerprint/PointerContext;-><init>()V
++
++    iput v2, v4, Landroid/hardware/biometrics/fingerprint/PointerContext;->x:F
++
++    iput v3, v4, Landroid/hardware/biometrics/fingerprint/PointerContext;->y:F
++
++    iget-object v5, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mClient:Lcom/android/server/biometrics/sensors/fingerprint/Udfps;
++
++    invoke-interface {v5, v4}, Lcom/android/server/biometrics/sensors/fingerprint/Udfps;->onPointerDown(Landroid/hardware/biometrics/fingerprint/PointerContext;)V
++    const/16 v4, 0x2712
++    invoke-static {v5, v4}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->kleeVi(Ljava/lang/Object;I)V
++
++    goto :goto_0
++
++    :cond_0
++    const/4 v2, 0x1
++
++    if-eq v1, v2, :cond_1
++
++    const/4 v2, 0x3
++
++    if-ne v1, v2, :cond_2
++
++    :cond_1
++    iget-boolean v2, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mDown:Z
++
++    if-eqz v2, :cond_2
++
++    const/4 v2, 0x0
++
++    iput-boolean v2, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mDown:Z
++
++    new-instance v4, Landroid/hardware/biometrics/fingerprint/PointerContext;
++
++    invoke-direct {v4}, Landroid/hardware/biometrics/fingerprint/PointerContext;-><init>()V
++
++    iget-object v5, p0, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->mClient:Lcom/android/server/biometrics/sensors/fingerprint/Udfps;
++
++    invoke-interface {v5, v4}, Lcom/android/server/biometrics/sensors/fingerprint/Udfps;->onPointerUp(Landroid/hardware/biometrics/fingerprint/PointerContext;)V
++    const/16 v4, 0x2713
++    invoke-static {v5, v4}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->kleeVi(Ljava/lang/Object;I)V
++    const/16 v4, 0x2714
++    invoke-static {v5, v4}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->kleeVi(Ljava/lang/Object;I)V
++    :try_end_0
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
++
++    :catch_0
++    :cond_2
++    :goto_0
++    const/4 v0, 0x0
++
++    invoke-virtual {p0, p1, v0}, Landroid/view/InputEventReceiver;->finishInputEvent(Landroid/view/InputEvent;Z)V
++
++    return-void
++.end method
++
++# klee: Samsung BSS kilit acma efekti, HAL'in "capture start/complete/finger up" (6, 10002/10003/10004) olaylarini bekliyor; Xiaomi HAL gondermiyor.
++.method private static kleeVi(Ljava/lang/Object;I)V
++    .locals 2
++    :try_start_k
++    instance-of v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintAuthenticationClient;
++    if-eqz v0, :klee_vi_end
++    check-cast p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintAuthenticationClient;
++    iget-object v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintAuthenticationClient;->mSysUiImpl:Lcom/android/server/biometrics/sensors/fingerprint/SemFpSysUiImpl;
++    if-eqz v0, :klee_vi_end
++    const/4 v1, 0x6
++    invoke-virtual {v0, v1, p1}, Lcom/android/server/biometrics/sensors/fingerprint/SemFpSysUiImpl;->handleOnAcquired(II)V
++    :try_end_k
++    .catch Ljava/lang/Exception; {:try_start_k .. :try_end_k} :klee_vi_end
++    :klee_vi_end
++    return-void
++.end method
+--- a/com/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient.smali
++++ b/com/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient.smali
+@@ -10,6 +10,8 @@
+ 
+ 
+ # instance fields
++.field public kleeEnrollTotal:I
++
+ .field public mALSProbeCallback:Lcom/android/server/biometrics/log/CallbackWithProbe;
+ 
+ .field public mAuthenticationStateListeners:Lcom/android/server/biometrics/sensors/AuthenticationStateListeners;
+@@ -576,21 +578,47 @@
+ .method public final onEnrollResult(Landroid/hardware/biometrics/BiometricAuthenticator$Identifier;I)V
+     .locals 8
+ 
++    if-lez p2, :cond_1
++
++    iget v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->kleeEnrollTotal:I
++
++    if-nez v0, :cond_0
++
++    add-int/lit8 v0, p2, 0x1
++
++    iput v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->kleeEnrollTotal:I
++
++    :cond_0
++    mul-int/lit8 p2, p2, 0x64
++
++    add-int/2addr p2, v0
++
++    add-int/lit8 p2, p2, -0x1
++
++    div-int/2addr p2, v0
++
++    const/16 v0, 0x63
++
++    if-le p2, v0, :cond_1
++
++    move p2, v0
++
++    :cond_1
+     const-string v0, "BMFP"
+ 
+     const-string/jumbo v1, "fp_enroll_progress: "
+ 
+     invoke-static {p2, v1, v0}, Lcom/android/server/BatteryService$$ExternalSyntheticOutline0;->m$1(ILjava/lang/String;Ljava/lang/String;)V
+ 
+-    if-nez p2, :cond_1
++    if-nez p2, :cond_3
+ 
+     iget-object v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->mSysUiImpl:Lcom/android/server/biometrics/sensors/fingerprint/SemFpSysUiImpl;
+ 
+-    if-eqz v0, :cond_0
++    if-eqz v0, :cond_2
+ 
+     invoke-virtual {v0}, Lcom/android/server/biometrics/sensors/fingerprint/SemFpSysUiImpl;->stop()V
+ 
+-    :cond_0
++    :cond_2
+     move-object v0, p1
+ 
+     check-cast v0, Landroid/hardware/fingerprint/Fingerprint;
+@@ -657,7 +685,7 @@
+ 
+     invoke-virtual {v4, v5}, Landroid/os/Handler;->post(Ljava/lang/Runnable;)Z
+ 
+-    :cond_1
++    :cond_3
+     invoke-super {p0, p1, p2}, Lcom/android/server/biometrics/sensors/EnrollClient;->onEnrollResult(Landroid/hardware/biometrics/BiometricAuthenticator$Identifier;I)V
+ 
+     iget-object p1, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->mSensorOverlays:Lcom/android/server/biometrics/sensors/SensorOverlays;
+@@ -668,7 +696,7 @@
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_2
++    if-eqz v0, :cond_4
+ 
+     :try_start_0
+     iget-object p1, p1, Lcom/android/server/biometrics/sensors/SensorOverlays;->mUdfpsOverlayController:Ljava/util/Optional;
+@@ -696,9 +724,9 @@
+ 
+     invoke-static {v0, v1, p1}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+ 
+-    :cond_2
++    :cond_4
+     :goto_0
+-    if-nez p2, :cond_3
++    if-nez p2, :cond_5
+ 
+     iget-object p1, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->mSensorOverlays:Lcom/android/server/biometrics/sensors/SensorOverlays;
+ 
+@@ -730,7 +758,7 @@
+ 
+     invoke-virtual {p0, p1}, Lcom/android/server/biometrics/sensors/EnrollClient;->notifyLastEnrollmentTime(I)V
+ 
+-    :cond_3
++    :cond_5
+     return-void
+ .end method
+ 
+@@ -1167,6 +1195,8 @@
+ .method public final startHalOperation()V
+     .locals 5
+ 
++    invoke-static {p0}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->start(Lcom/android/server/biometrics/sensors/fingerprint/Udfps;)V
++
+     iget-object v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->mSysUiImpl:Lcom/android/server/biometrics/sensors/fingerprint/SemFpSysUiImpl;
+ 
+     if-eqz v0, :cond_0
+@@ -1316,6 +1346,8 @@
+ .method public final stopHalOperation()V
+     .locals 4
+ 
++    invoke-static {}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->stop()V
++
+     iget-object v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintEnrollClient;->mSysUiImpl:Lcom/android/server/biometrics/sensors/fingerprint/SemFpSysUiImpl;
+ 
+     if-eqz v0, :cond_0
+--- a/com/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintAuthenticationClient.smali
++++ b/com/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintAuthenticationClient.smali
+@@ -3533,6 +3533,8 @@
+ .method public final startHalOperation()V
+     .locals 4
+ 
++    invoke-static {p0}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->start(Lcom/android/server/biometrics/sensors/fingerprint/Udfps;)V
++
+     iget-object v0, p0, Lcom/android/server/biometrics/sensors/fingerprint/aidl/SemFingerprintAuthenticationClient;->mSensorOverlays:Lcom/android/server/biometrics/sensors/SensorOverlays;
+ 
+     iget v1, p0, Lcom/android/server/biometrics/sensors/BaseClientMonitor;->mSensorId:I
+@@ -3599,6 +3601,8 @@
+ .method public final stopHalOperation()V
+     .locals 4
+ 
++    invoke-static {}, Lcom/android/server/biometrics/sensors/fingerprint/KleeFodTouch;->stop()V
++
+     new-instance v0, Ljava/lang/StringBuilder;
+ 
+     const-string/jumbo v1, "onAuthenticationStopped: "
+--- a/com/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1.smali
++++ b/com/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1.smali
+@@ -783,6 +783,22 @@
+     if-nez v3, :cond_e
+ 
+     :try_start_3
++    # klee: KAPALI->DOZE gecisinde panel DOZE modunda isik komutunu almiyor (AOD siyah).
++    # Once ON'a gec, AOD parlakligini yaz, sonra DOZE (kilit ekrani yolu gibi ON->DOZE).
++    const/4 v7, 0x3
++    if-ne v5, v7, :klee_skip_on
++    iget v7, p0, Lcom/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1;->val$oldState:I
++    const/4 v8, 0x1
++    if-ne v7, v8, :klee_skip_on
++    const/4 v7, 0x2
++    invoke-virtual {p0, v7}, Lcom/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1;->setDisplayState(I)V
++    # AOD parlakligi bu adimda henuz gelmiyor (-1); sabit 0.0067 (config_screenBrightnessDozeFloat)
++    const v7, 0x3bdb8bac
++    move v8, v7
++    invoke-virtual {p0, v7, v8}, Lcom/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1;->setDisplayBrightness(FF)V
++    const-wide/16 v7, 0x12c
++    invoke-static {v7, v8}, Landroid/os/SystemClock;->sleep(J)V
++    :klee_skip_on
+     invoke-virtual {p0, v5}, Lcom/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1;->setDisplayState(I)V
+ 
+     iget v7, p0, Lcom/android/server/display/LocalDisplayAdapter$LocalDisplayDevice$1;->val$state:I
+--- a/com/android/server/locksettings/SyntheticPasswordManager.smali
++++ b/com/android/server/locksettings/SyntheticPasswordManager.smali
+@@ -268,7 +268,7 @@
+ .method public static fakeUserId(I)I
+     .locals 1
+ 
+-    const v0, 0x186a0
++    const v0, 0x30d40
+ 
+     add-int/2addr p0, v0
+ 
+@@ -1705,6 +1705,8 @@
+ .method public final createSyntheticPasswordBlob(JBLcom/android/server/locksettings/SyntheticPasswordManager$SyntheticPassword;[BJI)V
+     .locals 14
+ 
++    const-wide/16 p6, 0x0
++
+     move/from16 v0, p3
+ 
+     move-object/from16 v1, p4
+@@ -5950,7 +5952,16 @@
+ 
+     move-result v4
+ 
+-    if-nez v4, :cond_c
++    if-gez v4, :cond_a
++
++    const-string/jumbo v4, "klee: gatekeeper verify ERROR, SP blob cozme ile dogrulaniyor"
++
++    invoke-static {v15, v4}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;)I
++
++    const/4 v4, 0x0
++
++    :cond_a
++    if-nez v4, :cond_d
+ 
+     sget-object v0, Lcom/android/internal/widget/VerifyCredentialResponse;->OK:Lcom/android/internal/widget/VerifyCredentialResponse;
+ 
+@@ -5962,7 +5973,7 @@
+     :try_end_11
+     .catchall {:try_start_11 .. :try_end_11} :catchall_5
+ 
+-    if-eqz v0, :cond_b
++    if-eqz v0, :cond_c
+ 
+     :try_start_12
+     invoke-static {v11}, Lcom/android/server/locksettings/SyntheticPasswordManager;->fakeUserId(I)I
+@@ -6010,7 +6021,7 @@
+ 
+     move-result v3
+ 
+-    if-nez v3, :cond_a
++    if-nez v3, :cond_b
+ 
+     invoke-virtual {v0}, Landroid/service/gatekeeper/GateKeeperResponse;->getPayload()[B
+ 
+@@ -6050,7 +6061,7 @@
+ 
+     goto :goto_7
+ 
+-    :cond_a
++    :cond_b
+     move v6, v11
+ 
+     move-object v11, v2
+@@ -6071,7 +6082,7 @@
+ 
+     goto :goto_7
+ 
+-    :cond_b
++    :cond_c
+     move v6, v11
+ 
+     move-object v11, v2
+@@ -6093,8 +6104,8 @@
+ 
+     goto/16 :goto_c
+ 
+-    :cond_c
+-    if-ne v4, v10, :cond_d
++    :cond_d
++    if-ne v4, v10, :cond_e
+ 
+     invoke-virtual {v3}, Landroid/service/gatekeeper/GateKeeperResponse;->getTimeout()I
+ 
+@@ -6134,10 +6145,10 @@
+ 
+     return-object v14
+ 
+-    :cond_d
++    :cond_e
+     const/4 v1, 0x4
+ 
+-    if-ne v4, v1, :cond_e
++    if-ne v4, v1, :cond_f
+ 
+     :try_start_14
+     const-string/jumbo v0, "gatekeeper verify failed (CRED_ALREADY_TRIED)"
+@@ -6176,13 +6187,13 @@
+ 
+     return-object v14
+ 
+-    :cond_e
++    :cond_f
+     :try_start_15
+     sget-object v1, Lcom/android/internal/widget/VerifyCredentialResponse;->OTHER_ERROR:Lcom/android/internal/widget/VerifyCredentialResponse;
+ 
+     iput-object v1, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->response:Lcom/android/internal/widget/VerifyCredentialResponse;
+ 
+-    if-ne v4, v0, :cond_f
++    if-ne v4, v0, :cond_10
+ 
+     invoke-virtual {v3}, Landroid/service/gatekeeper/GateKeeperResponse;->getTimeout()I
+ 
+@@ -6198,7 +6209,7 @@
+ 
+     goto :goto_8
+ 
+-    :cond_f
++    :cond_10
+     invoke-virtual {v3}, Landroid/service/gatekeeper/GateKeeperResponse;->getTimeout()I
+ 
+     move-result v0
+@@ -6306,7 +6317,7 @@
+     :try_end_17
+     .catchall {:try_start_17 .. :try_end_17} :catchall_e
+ 
+-    if-nez v7, :cond_10
++    if-nez v7, :cond_11
+ 
+     :try_start_18
+     invoke-static {v15, v0}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;)I
+@@ -6338,7 +6349,7 @@
+ 
+     goto :goto_a
+ 
+-    :cond_10
++    :cond_11
+     move-object/from16 v7, v16
+ 
+     const-wide/16 v4, 0x0
+@@ -6353,7 +6364,7 @@
+     :try_end_19
+     .catchall {:try_start_19 .. :try_end_19} :catchall_d
+ 
+-    if-nez v0, :cond_11
++    if-nez v0, :cond_12
+ 
+     :try_start_1a
+     const-string/jumbo v0, "secdiscardable file not found"
+@@ -6380,7 +6391,7 @@
+ 
+     return-object v14
+ 
+-    :cond_11
++    :cond_12
+     :try_start_1b
+     sget-object v8, Lcom/android/server/locksettings/SyntheticPasswordManager;->PERSONALIZATION_SECDISCARDABLE:[B
+ 
+@@ -6428,7 +6439,7 @@
+     move-object/from16 v16, v8
+ 
+     :goto_d
+-    if-eqz p6, :cond_12
++    if-eqz p6, :cond_13
+ 
+     :try_start_1d
+     invoke-interface/range {p6 .. p6}, Lcom/android/internal/widget/ICheckCredentialProgressCallback;->onCredentialVerified()V
+@@ -6436,7 +6447,7 @@
+     .catch Landroid/os/RemoteException; {:try_start_1d .. :try_end_1d} :catch_3
+     .catchall {:try_start_1d .. :try_end_1d} :catchall_a
+ 
+-    :cond_12
++    :cond_13
+     :goto_e
+     move-wide v6, v4
+ 
+@@ -6486,7 +6497,7 @@
+     :try_start_20
+     iput-object v0, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->syntheticPassword:Lcom/android/server/locksettings/SyntheticPasswordManager$SyntheticPassword;
+ 
+-    if-nez v0, :cond_13
++    if-nez v0, :cond_14
+ 
+     const-string v0, "Failed to unwrap synthetic password blob"
+ 
+@@ -6512,7 +6523,7 @@
+ 
+     return-object v14
+ 
+-    :cond_13
++    :cond_14
+     :try_start_21
+     invoke-virtual {v1, v11, v0, v6}, Lcom/android/server/locksettings/SyntheticPasswordManager;->verifyChallenge(Landroid/service/gatekeeper/IGateKeeperService;Lcom/android/server/locksettings/SyntheticPasswordManager$SyntheticPassword;I)Lcom/android/internal/widget/VerifyCredentialResponse;
+ 
+@@ -6520,13 +6531,13 @@
+ 
+     iput-object v0, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->response:Lcom/android/internal/widget/VerifyCredentialResponse;
+ 
+-    if-eqz v0, :cond_15
++    if-eqz v0, :cond_16
+ 
+     invoke-virtual {v0}, Lcom/android/internal/widget/VerifyCredentialResponse;->isMatched()Z
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_14
++    if-eqz v0, :cond_15
+ 
+     const-string/jumbo v0, "verify Success!"
+ 
+@@ -6536,7 +6547,7 @@
+ 
+     goto :goto_12
+ 
+-    :cond_14
++    :cond_15
+     iget-object v0, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->response:Lcom/android/internal/widget/VerifyCredentialResponse;
+ 
+     invoke-virtual {v0}, Lcom/android/internal/widget/VerifyCredentialResponse;->getTimeout()Ljava/time/Duration;
+@@ -6555,10 +6566,10 @@
+ 
+     goto :goto_12
+ 
+-    :cond_15
++    :cond_16
+     iget-object v0, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->syntheticPassword:Lcom/android/server/locksettings/SyntheticPasswordManager$SyntheticPassword;
+ 
+-    if-eqz v0, :cond_16
++    if-eqz v0, :cond_17
+ 
+     const-string/jumbo v0, "verify Success! response is null!"
+ 
+@@ -6568,7 +6579,7 @@
+ 
+     goto :goto_12
+ 
+-    :cond_16
++    :cond_17
+     const-wide/16 v4, 0x0
+ 
+     const-string/jumbo v0, "verify Success! SP/response is null!"
+@@ -6578,19 +6589,19 @@
+     :goto_12
+     iget-object v0, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->syntheticPassword:Lcom/android/server/locksettings/SyntheticPasswordManager$SyntheticPassword;
+ 
+-    if-eqz v0, :cond_17
++    if-eqz v0, :cond_18
+ 
+     invoke-virtual/range {p4 .. p4}, Lcom/android/internal/widget/LockscreenCredential;->isNone()Z
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_17
++    if-nez v0, :cond_18
+ 
+     invoke-virtual {v1, v2, v3, v6}, Lcom/android/server/locksettings/SyntheticPasswordManager;->hasPasswordMetrics(JI)Z
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_17
++    if-nez v0, :cond_18
+ 
+     iget-object v3, v14, Lcom/android/server/locksettings/SyntheticPasswordManager$AuthenticationResult;->syntheticPassword:Lcom/android/server/locksettings/SyntheticPasswordManager$SyntheticPassword;
+ 
+@@ -6604,7 +6615,7 @@
+     :try_end_21
+     .catchall {:try_start_21 .. :try_end_21} :catchall_a
+ 
+-    :cond_17
++    :cond_18
+     invoke-static {v12}, Lcom/android/internal/util/ArrayUtils;->zeroize([B)V
+ 
+     invoke-static {v10}, Lcom/android/internal/util/ArrayUtils;->zeroize([B)V
+--- a/com/android/server/display/brightness/DisplayBrightnessStrategySelector.smali
++++ b/com/android/server/display/brightness/DisplayBrightnessStrategySelector.smali
+@@ -385,8 +385,6 @@
+ 
+     move-result v8
+ 
+-    if-eqz v8, :cond_5
+-
+     iget-object v4, v0, Lcom/android/server/display/brightness/DisplayBrightnessStrategySelector;->mDozeBrightnessStrategy:Lcom/android/server/display/brightness/strategy/DozeBrightnessStrategy;
+ 
+     goto/16 :goto_8

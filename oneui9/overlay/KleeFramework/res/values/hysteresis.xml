@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- klee m1: Samsung histerezis tablosu (69 lux'te parlaklik icin >276 lux gerekiyordu) klee sensoru icin cok genis; ~%30 bant. -->
+<resources>
+    <integer-array name="config_HysteresisBrightInputLux">
+        <item>0</item><item>5</item><item>10</item><item>20</item><item>50</item><item>100</item><item>200</item><item>500</item><item>1000</item><item>2000</item><item>5000</item><item>10000</item><item>30000</item><item>100000</item>
+    </integer-array>
+    <integer-array name="config_HysteresisBrightOutputLux">
+        <item>4</item><item>9</item><item>15</item><item>27</item><item>65</item><item>130</item><item>260</item><item>650</item><item>1300</item><item>2600</item><item>6500</item><item>13000</item><item>39000</item><item>999999</item>
+    </integer-array>
+    <integer-array name="config_HysteresisDarkInputLux">
+        <item>0</item><item>5</item><item>10</item><item>20</item><item>50</item><item>100</item><item>200</item><item>500</item><item>1000</item><item>2000</item><item>5000</item><item>10000</item><item>30000</item><item>100000</item>
+    </integer-array>
+    <integer-array name="config_HysteresisDarkOutputLux">
+        <item>-1</item><item>2</item><item>6</item><item>13</item><item>35</item><item>70</item><item>140</item><item>350</item><item>700</item><item>1400</item><item>3500</item><item>7000</item><item>21000</item><item>70000</item>
+    </integer-array>
+</resources>

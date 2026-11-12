@@ -1,0 +1,5 @@
+system/lib64
+system/etc
+system/bin
+system/framework
+product/overlay

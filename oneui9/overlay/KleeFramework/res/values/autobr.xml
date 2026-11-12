@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- klee: A06 (LCD) adaptif parlaklik tablosu yok; Samsung yedek egrisi 4 lux'te %100 veriyordu.
+     S26U framework-res__m3qxxx__auto_generated_rro_product lux->nit tablosu. Nit->panel degeri vendor displayconfig haritasi (2..3500 nit). -->
+<resources>
+    <integer-array name="config_autoBrightnessLevels">
+        <item>1</item><item>2</item><item>3</item><item>4</item><item>5</item><item>10</item><item>15</item><item>20</item><item>25</item><item>50</item><item>100</item><item>300</item><item>500</item><item>1000</item><item>2000</item><item>3000</item><item>4000</item><item>5000</item><item>6000</item><item>7000</item><item>8000</item><item>9000</item><item>10000</item><item>12000</item><item>50000</item><item>999999</item>
+    </integer-array>
+    <integer-array name="config_autoBrightnessDisplayValuesNits">
+        <item>11</item><item>15</item><item>22</item><item>26</item><item>31</item><item>35</item><item>46</item><item>62</item><item>79</item><item>88</item><item>93</item><item>99</item><item>111</item><item>130</item><item>200</item><item>400</item><item>600</item><item>800</item><item>1000</item><item>1200</item><item>1400</item><item>1600</item><item>1800</item><item>2000</item><item>2450</item><item>2450</item><item>2450</item>
+    </integer-array>
+    <!-- o9-43: ayni egrinin panel degeri (1..255) karsiligi; vendor displayconfig nit haritasindan hesaplandi. Samsung SimpleMappingStrategy yolu da gecerli olsun. -->
+    <integer-array name="config_autoBrightnessLcdBacklightValues">
+        <item>3</item><item>4</item><item>5</item><item>6</item><item>7</item><item>8</item><item>11</item><item>14</item><item>18</item><item>19</item><item>21</item><item>22</item><item>24</item><item>28</item><item>43</item><item>86</item><item>128</item><item>170</item><item>176</item><item>181</item><item>186</item><item>191</item><item>196</item><item>202</item><item>218</item><item>218</item><item>218</item>
+    </integer-array>
+</resources>

@@ -1,0 +1,21 @@
+--- a/com/samsung/android/hardware/secinputdev/SemInputDeviceManagerService.smali
++++ b/com/samsung/android/hardware/secinputdev/SemInputDeviceManagerService.smali
+@@ -2878,6 +2878,18 @@
+         }
+     .end annotation
+ 
++    # klee: Xiaomi TSP'de FOD dokunma haritasi yok ("NA"); Samsung parmak izi efekti (BSS VisualEffectContainer) icin sahte 17x14 harita
++    sget-object v0, Lcom/samsung/android/hardware/secinputdev/utils/SemInputConstants$Property;->FOD_INFO:Lcom/samsung/android/hardware/secinputdev/utils/SemInputConstants$Property;
++    if-ne p2, v0, :klee_not_info
++    const-string v0, "17,14,60"
++    return-object v0
++    :klee_not_info
++    sget-object v0, Lcom/samsung/android/hardware/secinputdev/utils/SemInputConstants$Property;->FOD_POS:Lcom/samsung/android/hardware/secinputdev/utils/SemInputConstants$Property;
++    if-ne p2, v0, :klee_not_pos
++    const-string v0, "00000000001f007f00ff01fe03fe0ffc1ff01fe03f803f003e0000000000"
++    return-object v0
++    :klee_not_pos
++
+     .line 1178
+     invoke-virtual {p2}, Lcom/samsung/android/hardware/secinputdev/utils/SemInputConstants$Property;->isExternalRead()Z
+ 

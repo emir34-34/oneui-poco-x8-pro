@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- klee port: S26U framework-res__m3qxxx__auto_generated_rro_product degeri; AODService BrightnessManager bunu zorunlu istiyor -->
+<resources>
+    <integer-array name="config_aodBrightnessValues">
+        <item>0</item>
+        <item>12</item>
+        <item>29</item>
+        <item>50</item>
+    </integer-array>
+</resources>
