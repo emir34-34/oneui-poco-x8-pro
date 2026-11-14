@@ -1,0 +1,7 @@
+;; klee: Xiaomi camera (com.android.camera, platform_app) -> vendor.xiaomi.hardware.aidlbgservice.IBGService
+;; (hal_camera_service, hosted by camerahalserver). Without it the final JPEG never arrives:
+;; "initService ... binder failed", 24 s capture timeout, nothing saved. Appended to plat_sepolicy.cil.
+(allow platform_app hal_camera_service (service_manager (find)))
+(allow platform_app hal_camera_server (binder (call transfer)))
+(allow hal_camera_server platform_app (binder (call transfer)))
+(allow hal_camera_server platform_app (fd (use)))

@@ -1,6 +1,66 @@
 #!/system/bin/sh
+# A00) o9-47: klasor kabuk tarafindan yazilabilir olsun (temiz /data'da root:700 olusuyordu; modul/cmd.sh konamiyordu)
+mkdir -p /data/local/tmp/klee_mod; chown shell:shell /data/local/tmp/klee_mod; chmod 0777 /data/local/tmp/klee_mod
 # Logger v5. /metadata/oneui_debug halka; ADB'yi bu DSU'da açık tutar; uyku/uyanma ve ses satırlarını da yazar.
 # --- klee m4 (modül, root, oneuidbg) ---
+# A) m22 ses: Samsung AIDL dönüşümü MTK OUT_FM portunu tanımıyor -> APM yalnız hoparlör/mikrofonla açılıyor (BT A2DP yok,
+#    44,1 kHz tek çıkış -> video ile ses kayması). klee_port.rc'deki init bind'i EACCES ile düşüyor; burada FM'siz +
+#    spatializer'sız ayar /vendor/etc üstüne bağlanır. Ses HAL'ı önceden açıldıysa yeniden başlatılır.
+( for f in audio_policy_configuration_a2dp_offload_enable_cg_enable_cts.xml audio_policy_configuration.xml; do
+    grep -q "FM Tuner" /vendor/etc/$f && mount -o bind /system/etc/klee_audio/$f /vendor/etc/$f && echo "OK $f"
+  done
+  # m24 BT A2DP DSP offload: bluetooth modülünde yalnız işitme cihazı; A2DP primary modülde (encodedFormats boş, APM yamalı).
+  B=bluetooth_a2dp_offload_ums_offload_audio_policy_configuration.xml
+  mount -o bind /system/etc/klee_audio/$B /vendor/etc/$B && echo "OK $B"
+  setprop persist.bluetooth.a2dp_offload.disabled false
+  P=$(pidof android.hardware.audio.service-aidl.mediatek); [ -n "$P" ] && { echo "HAL acikti ($P), yeniden"; kill $P; }
+  echo "ses bitti $(cat /proc/uptime)" ) > /data/local/tmp/klee_mod/audio.log 2>&1
+# A2) m24 BT: Samsung BT uygulaması offload açık (A2dpServiceHelper/AdapterProperties/codec öncelikleri) +
+#     libbluetooth_jni klee7: offload bayrakları + BT çipine offload başlamadan önce 0xfd5d [a0 03] (AOSP coex_buf_count=3;
+#     MTK çipi bunu almadan DSP'den paket çekmiyor: fw_qu=0). Arka planda çalışır (açılışı bekletmez).
+( A=/apex/com.android.bt/app/Bluetooth@CP2A.260605.016/Bluetooth.apk; J=/apex/com.android.bt/lib64/libbluetooth_jni.so
+  # Native kütüphane: zygote'tan önce (PM bunu taramaz).
+  for i in $(seq 1 120); do [ -f $J ] && break; sleep 0.25; done
+  mount -o bind /system/lib64/klee_bt/libbluetooth_jni.so $J && echo "jni bind ok $(cat /proc/uptime)"
+  Z=$(pidof zygote64); [ -n "$Z" ] && nsenter -t $Z -m -- mount -o bind /system/lib64/klee_bt/libbluetooth_jni.so $J && echo "zygote acikti ($Z), jni ona da"
+  # APK: PackageManager taramasından SONRA (önce bağlanırsa imza farkı -> paket reddi -> system_server çöküş döngüsü, m24 BROM).
+  # BT süreci ilk açıldığında tarama bitmiştir; global + zygote ad alanına bağla, eski dalvik önbelleğini taşı, BT'yi yeniden başlat.
+  for i in $(seq 1 600); do P=$(pidof com.android.bluetooth); [ -n "$P" ] && break; sleep 0.5; done
+  [ -z "$P" ] && { echo "BT sureci gelmedi, APK baglanmadi"; exit 0; }
+  sleep 2
+  Z=$(pidof zygote64)
+  mount -o bind /system/etc/klee_bt/Bluetooth.apk $A && nsenter -t $Z -m -- mount -o bind /system/etc/klee_bt/Bluetooth.apk $A && echo "apk bind ok (BT $P, zygote $Z) $(cat /proc/uptime)"
+  mkdir -p /data/local/tmp/klee_mod/dalvik_old
+  for f in /data/dalvik-cache/arm64/apex@com.android.bt@app@Bluetooth*; do [ -e "$f" ] && mv "$f" /data/local/tmp/klee_mod/dalvik_old/; done
+  kill $P; echo "BT yeniden ($P)"
+  echo "bt bitti" ) > /data/local/tmp/klee_mod/bt.log 2>&1 &
+# A3) Telefon: Samsung Ayarlar/TelephonyUI SIM varlığını ril.ICC_TYPE<n>'den okur (Samsung RIL yazar, MTK RIL yazmaz)
+#     -> "Mobil ağlar" gizli, SIM yöneticisi SIM'i "takılı değil" gösterir. MTK uicctype -> Samsung ICC tipi (0 yok, 1 SIM, 2 USIM).
+( t(){ case "$1" in SIM) echo 1;; USIM) echo 2;; "") echo 0;; *) echo 2;; esac; }
+  while :; do
+    a=$(t "$(getprop vendor.gsm.ril.uicctype)"); b=$(t "$(getprop vendor.gsm.ril.uicctype.2)")
+    [ "$(getprop ril.ICC_TYPE0)" = "$a" ] || setprop ril.ICC_TYPE0 $a
+    [ "$(getprop ril.ICC_TYPE1)" = "$b" ] || setprop ril.ICC_TYPE1 $b
+    sleep 5
+  done ) &
+chmod 0666 /data/local/tmp/klee_mod/bt.log 2>/dev/null
+chmod 0666 /data/local/tmp/klee_mod/audio.log 2>/dev/null
+# 0) m18: SELinux politikası yeniden yüklenir. Fark: mapping/202604.cil'de platform_app_36 -> platform_app_202604, priv_app_36 -> priv_app_202604
+#    (Android 17'nin targetSdk<=36 uygulama alanları vendor kurallarının dışında kalıyordu; Xiaomi kamera MiSys/BGService bulamıyordu).
+#    Kapatmak: /data/local/tmp/klee_mod/nosepolicy
+if [ -f /system/etc/klee_sepolicy ] && [ ! -e /data/local/tmp/klee_mod/nosepolicy ]; then
+  if cat /system/etc/klee_sepolicy > /sys/fs/selinux/load 2>/data/local/tmp/klee_mod/sepolicy.err; then echo "$(date +%T) yuklendi" > /data/local/tmp/klee_mod/sepolicy.log
+  else echo "$(date +%T) HATA" > /data/local/tmp/klee_mod/sepolicy.log; fi
+  dmesg | grep -iE "selinux|policy" | tail -40 >> /data/local/tmp/klee_mod/sepolicy.log
+  chmod 0666 /data/local/tmp/klee_mod/sepolicy.* 2>/dev/null
+fi
+# 0b) m19 GELISTIRME ARACI (Slot A oncesi kaldirilacak): /data/local/tmp/klee_mod/cmd.sh varsa root olarak calistirir,
+#     ciktiyi cmd.out'a yazar, dosyayi siler. Yalniz bu DSU'da; adb ile yeniden baslatmadan root komut icin.
+( C=/data/local/tmp/klee_mod/cmd.sh; O=/data/local/tmp/klee_mod/cmd.out
+  while :; do
+    if [ -f $C ]; then mv $C $C.run; { echo "== $(date +%T)"; sh $C.run; echo "== rc=$?"; } > $O 2>&1; rm -f $C.run; chmod 0666 $O; fi
+    sleep 1
+  done ) &
 # 1) AOD arka ışığı: KAPALI->DOZE geçişinde arka ışık 0 kalıyor. DOZE'da 0 görülürse AOD seviyesini (125/16383) yaz; çekirdek kaydını da topla.
 ( B=/sys/devices/platform/mtk-leds/leds/lcd-backlight/brightness; L=125; O=/data/local/tmp/klee_mod/aodbl.log; prev=""
   while :; do

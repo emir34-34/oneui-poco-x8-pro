@@ -27,17 +27,20 @@ need to download the firmware yourself.
 |---|---|
 | Boot, Galaxy S26 Ultra lock screen and notification panel, ADB | ✅ |
 | Boot time | ✅ screen at ~50–63 s |
-| PIN lock | ✅ |
-| In-display fingerprint (enrol, unlock) | ✅ |
-| Samsung fingerprint unlock animation (Good Lock / LockStar) | ✅ |
+| PIN lock | ✅ (DSU workaround, see notes) |
+| In-display fingerprint (enrol, unlock), LockStar animation | ✅ |
 | Always On Display | ✅ |
 | Wi-Fi, Google and Samsung sign-in | ✅ |
 | Fast charging | ✅ ~35–55 W |
-| Lock screen elements around the sensor | 🟡 icon size being tuned |
-| Adaptive brightness | ❌ light sensor reports an almost constant value |
-| SMS, VoLTE, SIM manager | ❌ |
+| Adaptive brightness | ✅ under-display light sensor works |
+| Flashlight with strength levels | ✅ |
+| Xiaomi camera (photos saved) | ✅ |
+| Bluetooth audio (A2DP offload) | ✅ |
+| SIM, mobile data, SMS in/out, incoming/outgoing calls | ✅ incoming calls arrive late (open) |
+| Lock screen / AOD clock on a clean install | 🟡 fixed in o9-48, not yet tested |
+| 5G | 🟡 option shown, network stays on LTE (NR restricted) |
+| VoLTE / VoWiFi, MMS | ❌ |
 | Theme Store, Gallery AI editing | ❌ |
-| Camera, Bluetooth, GPS, calls, mobile data | not tested |
 
 How each fix works is in **[NOTES.md](NOTES.md)**.
 
@@ -53,16 +56,22 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 |---|---|
 | `NOTES.md` | everything learned: the fixes, why they are needed, the test loop |
 | `tools/build_image.sh` | builds the EROFS `system.img` with the AVB hashtree footer |
-| `tools/dsu_cycle.sh`, `tools/auto_install.sh` | install the image as DSU (32 GiB userdata), skip setup, collect a diagnosis |
+| `tools/dsu_install_file.sh` | install the image as DSU from Infinity X: push, then pipe into `gsi_tool` on the phone (32 GiB userdata, no reboot) |
+| `tools/dsu_cycle.sh`, `tools/auto_install.sh` | older install + diagnosis loop |
+| `tools/secil_test.sh` | compiles the split SELinux policy like `init` does, before building an image |
+| `tools/build_split.sh` | splits the tree into `system`, `system_ext`, `product` images (preparation for a normal install) |
+| `tools/kleevendor/` | binds patched vendor RIL libraries from `/system/etc/klee_vendor` over `/vendor/lib64` before `rild` starts |
 | `tools/diag_oneui.sh` | read-only diagnosis (logcat, dumpsys, props) while One UI runs |
 | `tools/build_module.sh`, `tools/push_module.sh` | build and push a small add-on module instead of a new 6 GB image |
 | `tools/kleemod/klee_modmount.{sh,rc}` | module loader: overlayfs mounts before zygote, skips a module that broke the boot |
 | `tools/kleemod/klee_fpfs.c` | adds `/sys/class/fingerprint/fingerprint/position`, which Samsung's lock screen and AOD read |
 | `tools/build_services_mod.sh` | rebuilds `services.jar` / `secinputdev-service.jar` from smali, replacing only the dex files |
-| `patches/` | smali diffs against the stock One UI 9 `services.jar` and `secinputdev-service.jar` |
+| `patches/` | smali diffs against the stock One UI 9 `services.jar`, `secinputdev-service.jar` and `framework.jar` (flashlight levels) |
 | `overlay/KleeFramework/` | framework overlay source: brightness curve, AOD brightness, hysteresis |
 | `module-example/` | an example module (`mod.list`, `mod.prop`, root helper script) |
 | `sepolicy/oneuidbg.cil` | the permissive debug domain used by the development tools |
+| `sepolicy/camera-bgservice.cil` | lets the Xiaomi camera reach its image-processing service |
+| `docs/NORMAL_INSTALL.md` | plan for leaving DSU: partitions, space in `super`, what must be reverted |
 | `docs/` | banners and a photo of the device |
 
 The loader, `klee_fpfs`, the debug domain and the helper scripts are **development tools** and are

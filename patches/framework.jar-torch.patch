@@ -1,0 +1,199 @@
+--- a/smali_classes2/android/hardware/camera2/CameraManager.smali
++++ b/smali_classes2/android/hardware/camera2/CameraManager.smali
+@@ -18,6 +18,8 @@
+ 
+ 
+ # static fields
++.field private static sKleeTorchMax:I
++
+ .field private static final greylist-max-o API_VERSION_1:I = 0x1
+ 
+ .field private static final greylist-max-o API_VERSION_2:I = 0x2
+@@ -1872,6 +1874,10 @@
+     .end annotation
+ 
+     .line 1869
++    const/4 v0, 0x1
++
++    invoke-static {p0, p1, v0}, Landroid/hardware/camera2/CameraManager;->kleeTorchLevel(Landroid/hardware/camera2/CameraManager;Ljava/lang/String;I)I
++
+     sget-boolean v0, Landroid/hardware/camera2/CameraManager$CameraManagerGlobal;->sCameraServiceDisabled:Z
+ 
+     if-nez v0, :cond_0
+@@ -1898,6 +1904,10 @@
+ 
+     move-result p0
+ 
++    invoke-static {p0}, Landroid/hardware/camera2/CameraManager;->kleeTorchInv(I)I
++
++    move-result p0
++
+     return p0
+ 
+     .line 1870
+@@ -3658,6 +3668,120 @@
+     return-void
+ .end method
+ 
++.method private static kleeIsSui()Z
++    .locals 2
++
++    :try_start_s
++    invoke-static {}, Landroid/app/ActivityThread;->currentPackageName()Ljava/lang/String;
++
++    move-result-object v0
++
++    const-string v1, "com.android.systemui"
++
++    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    return v0
++    :try_end_s
++    .catch Ljava/lang/Throwable; {:try_start_s .. :try_end_s} :catch_s
++
++    :catch_s
++    const/4 v0, 0x0
++
++    return v0
++.end method
++
++.method private static kleeTorchLevel(Landroid/hardware/camera2/CameraManager;Ljava/lang/String;I)I
++    .locals 3
++
++    # klee: Samsung SystemUI torch seviyesi 1..5 gonderir (A06 HAL max 5); klee HAL max 100 -> olcekle.
++    const/4 v0, 0x1
++
++    if-lt p2, v0, :cond_k
++
++    const/4 v0, 0x5
++
++    if-gt p2, v0, :cond_k
++
++    :try_start_k
++    invoke-static {}, Landroid/hardware/camera2/CameraManager;->kleeIsSui()Z
++
++    move-result v1
++
++    if-eqz v1, :cond_k
++
++    invoke-virtual {p0, p1}, Landroid/hardware/camera2/CameraManager;->getCameraCharacteristics(Ljava/lang/String;)Landroid/hardware/camera2/CameraCharacteristics;
++
++    move-result-object v1
++
++    sget-object v2, Landroid/hardware/camera2/CameraCharacteristics;->FLASH_INFO_STRENGTH_MAXIMUM_LEVEL:Landroid/hardware/camera2/CameraCharacteristics$Key;
++
++    invoke-virtual {v1, v2}, Landroid/hardware/camera2/CameraCharacteristics;->get(Landroid/hardware/camera2/CameraCharacteristics$Key;)Ljava/lang/Object;
++
++    move-result-object v1
++
++    check-cast v1, Ljava/lang/Integer;
++
++    invoke-virtual {v1}, Ljava/lang/Integer;->intValue()I
++
++    move-result v1
++
++    sput v1, Landroid/hardware/camera2/CameraManager;->sKleeTorchMax:I
++
++    if-le v1, v0, :cond_k
++
++    mul-int/2addr v1, p2
++
++    div-int/2addr v1, v0
++
++    return v1
++    :try_end_k
++    .catch Ljava/lang/Throwable; {:try_start_k .. :try_end_k} :catch_k
++
++    :catch_k
++    :cond_k
++    return p2
++.end method
++
++.method public static kleeTorchInv(I)I
++    .locals 3
++
++    # klee: HAL seviyesi (1..max) -> SystemUI 1..5
++    invoke-static {}, Landroid/hardware/camera2/CameraManager;->kleeIsSui()Z
++
++    move-result v0
++
++    if-eqz v0, :cond_i
++
++    sget v0, Landroid/hardware/camera2/CameraManager;->sKleeTorchMax:I
++
++    const/4 v1, 0x5
++
++    if-le v0, v1, :cond_i
++
++    if-lez p0, :cond_i
++
++    mul-int v2, p0, v1
++
++    add-int/2addr v2, v0
++
++    add-int/lit8 v2, v2, -0x1
++
++    div-int/2addr v2, v0
++
++    if-le v2, v1, :cond_c
++
++    move v2, v1
++
++    :cond_c
++    return v2
++
++    :cond_i
++    return p0
++.end method
++
++
+ .method public whitelist turnOnTorchWithStrengthLevel(Ljava/lang/String;I)V
+     .locals 3
+     .annotation system Ldalvik/annotation/Throws;
+@@ -3667,6 +3791,10 @@
+     .end annotation
+ 
+     .line 1838
++    invoke-static {p0, p1, p2}, Landroid/hardware/camera2/CameraManager;->kleeTorchLevel(Landroid/hardware/camera2/CameraManager;Ljava/lang/String;I)I
++
++    move-result p2
++
+     sget-boolean v0, Landroid/hardware/camera2/CameraManager$CameraManagerGlobal;->sCameraServiceDisabled:Z
+ 
+     if-nez v0, :cond_0
+@@ -3689,10 +3817,33 @@
+     move-result p0
+ 
+     .line 1842
++    :try_start_t
+     invoke-virtual {v0, p1, p2, v1, p0}, Landroid/hardware/camera2/CameraManager$CameraManagerGlobal;->turnOnTorchWithStrengthLevel(Ljava/lang/String;ILandroid/content/AttributionSourceState;I)V
++    :try_end_t
++    .catch Landroid/hardware/camera2/CameraAccessException; {:try_start_t .. :try_end_t} :catch_t
++
++    return-void
++
++    :catch_t
++    move-exception v0
++
++    invoke-static {}, Landroid/hardware/camera2/CameraManager;->kleeIsSui()Z
++
++    move-result v1
++
++    if-eqz v1, :cond_t
++
++    const-string v1, "CameraManager"
++
++    const-string v2, "klee: torch level ignored (camera in use)"
++
++    invoke-static {v1, v2}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+ 
+     return-void
+ 
++    :cond_t
++    throw v0
++
+     .line 1839
+     :cond_0
+     const-string p0, "No camera available on device"

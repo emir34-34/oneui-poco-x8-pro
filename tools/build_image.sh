@@ -1,8 +1,7 @@
 #!/bin/bash
 # Kullanım: build_image.sh <iter_dizini> [--jar] ; root + file_contexts -> system.img (EROFS + AVB footer)
-ROOT="${ROOT:-$(dirname "$(realpath "$0")")/..}"  # proje kökü: tools/port (apktool, erofs, avbtool) burada
 set -e
-I="$(realpath "$1")"; T="$ROOT/tools/port"; O="$ROOT/tools/port/services.orig.jar"
+I="$(realpath "$1")"; T="/home/administrator/Desktop/one ui port new*/tools/port"; O="/home/administrator/Desktop/one ui port new*/tools/port/services.orig.jar"
 if [ "$2" = --jar ]; then
 python3 -I - "$O" "$I/jars/services.hooked.jar" "$I/jars/services.aligned.jar" <<'EOF'
 import sys,zipfile,struct

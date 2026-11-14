@@ -1,4 +1,4 @@
-# One UI 9 on klee — notes (2026-11-08 → 2026-11-12)
+# One UI 9 on klee — notes (2026-11-08 → 2026-11-14)
 
 A **DSU** image: the installed ROM (Infinity X, Android 17, slot `_b`) is never touched,
 and nothing is written outside `/data/gsi` and `/data/local/tmp`.
@@ -13,20 +13,25 @@ and nothing is written outside `/data/gsi` and `/data/local/tmp`.
   extended with the types the 202604 vendor policy refers to.
 - Build log: about 45 base images (`o9-01` … `o9-45`) plus small add-on modules (`m1` … `m13`).
 
-## Status (o9-45 + m13, 2026-11-12)
+## Status (o9-48, 2026-11-14)
 
 | Area | Status |
 |---|---|
 | Boot, S26 Ultra SystemUI, ADB, Wi-Fi, Google/Samsung sign-in | ✅ |
 | Boot time | ✅ screen at ~50–63 s (was 109 s), see *Boot logo wait* |
-| PIN lock | ✅ correct PIN unlocks, wrong PIN is rejected |
-| Fingerprint enrol / unlock | ✅ |
-| Fingerprint unlock animation (Good Lock / LockStar) | ✅ with a synthetic touch map |
-| Always On Display (S26U AODService) | ✅ from lock screen and from home screen |
-| Lock screen elements around the sensor | ✅ text moved, icon size being tuned |
-| Adaptive brightness | ❌ light sensor reports an almost constant lux |
-| SMS, VoLTE, SIM manager, Theme Store, Gallery AI | ❌ |
-| Camera, Bluetooth, GPS, calls, mobile data | not tested |
+| PIN lock | ✅ correct PIN unlocks, wrong PIN is rejected (DSU workaround) |
+| Fingerprint enrol / unlock / LockStar animation | ✅ |
+| Always On Display (S26U AODService) | ✅ |
+| Adaptive brightness | ✅ |
+| Flashlight strength levels | ✅ |
+| Xiaomi camera | ✅ photos saved |
+| Bluetooth A2DP offload | ✅ |
+| SIM, mobile data, SMS in/out, calls in/out | ✅ incoming calls arrive late (open) |
+| 5G | 🟡 menu shown, modem reports NR restricted |
+| VoLTE / VoWiFi, MMS | ❌ |
+
+o9-48 is the first image meant to work on a **clean install** (no add-on module, setup wizard run
+normally); it is not tested yet.
 
 ## Test loop
 
@@ -103,11 +108,47 @@ gatekeeper SID (otherwise SystemUI fails with `UserNotAuthenticatedException`).
 - Lock screen clock missing: two `PLUGIN_FACE_WIDGET` plugins (AODService and the old
   `ClockPack_v80`); disabling ClockPack fixes it.
 
-### Brightness
-`KleeFramework` overlay adds the S26U lux → nit curve and a matching backlight array
-(`config_autoBrightnessLcdBacklightValues`) and a narrower hysteresis. The mapping is now built,
-but the Xiaomi `tsl2522_als` sensor reports 71–80 lux while its raw value moves between 4000 and
-11000, so the screen does not follow the light. Still open.
+### Adaptive brightness
+The under-display light sensor needs the MTK hardware composer to send it screen colour data
+(CWB). `hwcomposer.mtk_common.so` only turns that on when `ro.product.product.name` contains
+`rodin/dali/klimt/goya/klee/dash`; One UI's `a06xxx` gave a constant 0 lux. Fix: product
+`build.prop` `ro.product.product.name=a06xxx_klee`.
+
+### Flashlight
+Samsung SystemUI sends torch levels 1–5; the klee camera HAL's maximum is 100. `framework.jar`
+`CameraManager` (SystemUI process only) maps 1–5 to `level*max/5` and back, and ignores
+`CAMERA_IN_USE` instead of crashing the quick-settings slider (`patches/framework.jar-torch.patch`;
+the matching reverse mapping lives in `CameraManager$CameraManagerGlobal`).
+
+### Xiaomi camera
+The final JPEG comes from `vendor.xiaomi.hardware.aidlbgservice.IBGService` in `camerahalserver`.
+servicemanager refused `platform_app` → `hal_camera_service` (`find`), so every photo waited 24 s
+and was dropped. `sepolicy/camera-bgservice.cil`. Samsung's own camera app is removed (it does not
+work with this hardware).
+
+### Telephony (Infinity X vendor RIL with Samsung's framework)
+Patched vendor libraries, bound over `/vendor/lib64` before `rild` (`tools/kleevendor/`):
+- `libmtkmipc-ril.so`: incoming SMS were queued forever ("SMS framework isn't ready") because
+  Samsung never sends MTK's `SET_SMS_FWK_READY`; the check is skipped. SMSC is returned as
+  `"num",145` (Samsung's format), otherwise outgoing SMS used a broken SMSC. MMS profile id and
+  PDN protocol mapped to MTK values.
+- `librilfusion.so`: unsolicited responses (including call state) were held until an MTK-only
+  "client connected" flag; now passed on directly → incoming calls ring.
+- `services.jar`: Samsung RealTimeTokenService blocked system_server for 5 s on every network
+  change (a missing Samsung HAL), which delayed incoming calls.
+- SIM presence: Samsung Settings reads `ril.ICC_TYPE<n>`, which the MTK RIL does not write; a boot
+  script mirrors `vendor.gsm.ril.uicctype`.
+- 5G menu: TelephonyUI reads `persist.radio.def_network`; set to `26,26` in `build.prop`.
+
+### Lock screen root cause (DSU only)
+The Xiaomi gatekeeper TA adds 1000000 to user ids inside DSU; verifying uid 1200000 fails with
+"can't find uid". The o9-30/o9-31 workarounds weaken PIN-bound keys and **must be removed for a
+normal install**, where the TA should behave like on Infinity X.
+
+### Clean install
+Some fixes were first done with live commands and were lost when DSU data was reset. Everything
+is now in the image: ClockPack removed (lock screen / AOD clock), 5G property, vendor RIL
+libraries, product name. Rule from now on: a live fix is only a test, the image gets the real one.
 
 ### Other
 - `EngineeringModeManager` native check now also requires the Samsung engmode HAL to be declared
