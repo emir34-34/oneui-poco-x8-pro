@@ -1,0 +1,8 @@
+# klee o9-54: normal kurulumda (Enforcing) Samsung ozellik redleri, 2026-11-15
+# radio (com.android.phone) persist.sys.omc.notification yazamayip cokuyordu
+persist.sys.omc.notification u:object_r:radio_prop:s0 exact string
+# Samsung vold kendi durum ozellikleri
+sys.pdp.action          u:object_r:vold_prop:s0 exact string
+sys.is_vold_shutdown    u:object_r:vold_prop:s0 exact string
+sys.fs.checkpoint       u:object_r:vold_prop:s0 exact string
+# NFC HAL persist.vendor.nfc.* redleri: IX tipi vendor_persist_nfc_prop bizim politikada yok -> EKLENMEDI (once tip tanimi gerekir)

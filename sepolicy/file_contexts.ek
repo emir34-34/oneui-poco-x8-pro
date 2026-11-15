@@ -1,0 +1,3 @@
+# klee o9-54: KleeToys LED servisi
+/system/bin/kleeledd	u:object_r:kleeledd_exec:s0
+/dev/socket/kleeledd	u:object_r:kleeledd_socket:s0

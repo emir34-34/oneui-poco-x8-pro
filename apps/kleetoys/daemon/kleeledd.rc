@@ -1,0 +1,7 @@
+# klee o9-54: KleeToys kamera halkasi LED servisi (apps/kleetoys/daemon/kleeledd.c)
+service kleeledd /system/bin/kleeledd
+    class late_start
+    user system
+    group system
+    socket kleeledd stream 0666 system system
+    task_profiles ServiceCapacityLow

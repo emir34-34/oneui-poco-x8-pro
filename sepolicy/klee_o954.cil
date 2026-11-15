@@ -1,0 +1,51 @@
+;; ===== klee o9-54: KleeToys LED servisi (kleeledd) =====
+(type kleeledd)
+(roletype r kleeledd)
+(typeattributeset domain (kleeledd))
+(typeattributeset coredomain (kleeledd))
+(typeattributeset mlstrustedsubject (kleeledd))
+(type kleeledd_exec)
+(roletype object_r kleeledd_exec)
+(typeattributeset file_type (kleeledd_exec))
+(typeattributeset exec_type (kleeledd_exec))
+(typeattributeset system_file_type (kleeledd_exec))
+(type kleeledd_socket)
+(roletype object_r kleeledd_socket)
+(typeattributeset file_type (kleeledd_socket))
+(typeattributeset coredomain_socket (kleeledd_socket))
+;; init -> kleeledd alan gecisi
+(typetransition init kleeledd_exec process kleeledd)
+(allow init kleeledd_exec (file (read getattr map execute open)))
+(allow init kleeledd (process (transition siginh rlimitinh)))
+(dontaudit init kleeledd (process (noatsecure)))
+(allow kleeledd kleeledd_exec (file (entrypoint read execute map getattr open)))
+(allow kleeledd system_file (file (read getattr map execute open)))
+(allow kleeledd system_file (dir (search getattr)))
+(allow kleeledd system_file (lnk_file (read getattr)))
+;; init soketi /dev/socket/kleeledd
+(allow init kleeledd_socket (sock_file (create setattr unlink getattr)))
+(allow kleeledd self (unix_stream_socket (create bind listen accept read write getattr setopt shutdown)))
+;; LED sysfs (AW21024, system:system 0664)
+(allow kleeledd sysfs (dir (search getattr)))
+(allow kleeledd sysfs (lnk_file (read getattr)))
+(allow kleeledd sysfs_leds (dir (search getattr)))
+(allow kleeledd sysfs_leds (lnk_file (read getattr)))
+(allow kleeledd vendor_sysfs_led_file (file (open read write getattr)))
+(allow kleeledd vendor_sysfs_led_file (dir (search getattr)))
+;; uygulamalar sokete baglanir
+(allow appdomain kleeledd_socket (sock_file (write getattr)))
+(allow appdomain kleeledd (unix_stream_socket (connectto)))
+(allow appdomain socket_device (dir (search)))
+;; ===== klee o9-54: normal kurulumda Enforcing redleri (2026-11-15 ilk acilis) =====
+;; property_contexts ile cozuldu (radio_prop / vold_prop); burada ek kural gerekmez.
+;; ===== klee o9-54: VoLTE (MTK IMS) normal kurulumda Enforcing =====
+;; IX system_ext politikasindan (Lineage/MTK) eksik kalanlar; DSU permissive oldugu icin gorunmuyordu.
+;; HIPOTEZ: telefon logu (avc) ile dogrulanmadi (2026-11-15, telefon bagli degil).
+(typeattributeset hal_mtk_wfo_client (radio system_server))
+(allow radio hal_mtk_wfo (memfd_file (read write getattr map)))
+(allow hal_mtk_wfo radio (memfd_file (read write getattr map)))
+(allow system_server hal_mtk_wfo (memfd_file (read write getattr map)))
+(allow hal_mtk_wfo system_server (memfd_file (read write getattr map)))
+(allow radio system_mtk_bgdata_disabled_prop (property_service (set)))
+(allow radio system_mtk_gprs_attach_type_prop (property_service (set)))
+(allow radio system_mtk_gprs_attach_type_prop (file (read getattr map open)))
