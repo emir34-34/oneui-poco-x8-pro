@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
         }
         for (int i = 0; i < nc; i++) {
             if (!(pf[i + 1].revents & (POLLIN | POLLHUP | POLLERR))) continue;
-            char tmp[512];
+            char tmp[4096];
             ssize_t r = read(pf[i + 1].fd, tmp, sizeof tmp);
             if (r <= 0) {
                 close(pf[i + 1].fd);
@@ -104,11 +104,14 @@ int main(int argc, char **argv) {
                 if (nc == 0 && on) led_off();
                 continue;
             }
+            // Birikme olursa eski kareleri atla: bu okumadaki yalniz SON tam satir islenir.
+            char last[256]; int have = 0;
             for (ssize_t k = 0; k < r; k++) {
-                if (tmp[k] == '\n') { buf[i][blen[i]] = 0; handle(buf[i]); blen[i] = 0; }
+                if (tmp[k] == '\n') { buf[i][blen[i]] = 0; memcpy(last, buf[i], blen[i] + 1); have = 1; blen[i] = 0; }
                 else if (blen[i] < 255) buf[i][blen[i]++] = tmp[k];
                 else blen[i] = 0; // asiri uzun satir: at
             }
+            if (have) handle(last);
         }
     }
 }
