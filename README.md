@@ -1,13 +1,15 @@
 ![One UI 9 on Poco X8 Pro](docs/banner.png)
 
-# One UI 9 on the Poco X8 Pro (klee, MT6899) — experimental DSU port
+# One UI 9 on the Poco X8 Pro (klee, MT6899) — experimental port
 
 An attempt to run Samsung's One UI 9 system on the Xiaomi Poco X8 Pro (codename `klee`, MediaTek
 mt6899), on top of the phone's own Xiaomi vendor. The system is booted as a **DSU** (Dynamic System
 Update) image, so the installed ROM and `/data` are never touched. If a test boot fails, the phone
 falls back to the normal ROM by itself.
 
-> **Status (2026-11-12): boots and is usable for testing, not for daily use.**
+> **Status (2026-11-17): runs as a normal install (slot B, SELinux Enforcing) and is the author's
+> daily phone since 2026-11-16. New images are still tried as DSU first.** Not a release: some
+> features are missing, see the table.
 > Sister project: [Ubuntu Touch for the Poco X8 Pro](https://github.com/emir34-34/ubuntu-touch-poco-x8-pro).
 
 ## Disclaimer
@@ -27,7 +29,8 @@ need to download the firmware yourself.
 |---|---|
 | Boot, Galaxy S26 Ultra lock screen and notification panel, ADB | ✅ |
 | Boot time | ✅ screen at ~50–63 s |
-| PIN lock | ✅ (DSU workaround, see notes) |
+| Normal install in place of Infinity X (slot B), SELinux Enforcing | ✅ data kept on updates, see [docs/NORMAL_INSTALL.md](docs/NORMAL_INSTALL.md) |
+| PIN / pattern lock | ✅ (DSU workaround still in the image, see notes) |
 | In-display fingerprint (enrol, unlock), LockStar animation | ✅ |
 | Always On Display | ✅ |
 | Wi-Fi, Google and Samsung sign-in | ✅ |
@@ -37,7 +40,10 @@ need to download the firmware yourself.
 | Xiaomi camera (photos saved) | ✅ |
 | Bluetooth audio (A2DP offload) | ✅ |
 | SIM, mobile data, SMS in/out, incoming/outgoing calls | ✅ incoming calls arrive late (open) |
-| Lock screen / AOD clock on a clean install | 🟡 fixed in o9-48, not yet tested |
+| Lock screen / AOD clock on a clean install | ✅ |
+| 120 Hz option in Motion smoothness | ✅ added "High" (fixed 120 Hz) next to Adaptive/Standard |
+| Galaxy S24 Ultra Infinity video wallpapers, One UI 8.5 animated graphical wallpapers | ✅ |
+| KleeToys camera-ring LED, S26 Ultra sound themes | ✅ |
 | 5G | 🟡 option shown, network stays on LTE (NR restricted) |
 | VoLTE / VoWiFi, MMS | ❌ |
 | Theme Store, Gallery AI editing | ❌ |
@@ -71,7 +77,14 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 | `module-example/` | an example module (`mod.list`, `mod.prop`, root helper script) |
 | `sepolicy/oneuidbg.cil` | the permissive debug domain used by the development tools |
 | `sepolicy/camera-bgservice.cil` | lets the Xiaomi camera reach its image-processing service |
-| `docs/NORMAL_INSTALL.md` | plan for leaving DSU: partitions, space in `super`, what must be reverted |
+| `docs/NORMAL_INSTALL.md` | the normal install: `super` layout, flashing, first-boot rule, what is still open |
+| `tools/build_normal_super.sh` | builds the full `super.img` (One UI system/system_ext/product + the phone's vendor/odm/dlkm) with `lpmake` |
+| `tools/normal_kur_ilerleme.sh`, `tools/normal_guncelle_ilerleme.sh`, `tools/fastboot_ilerleme.py` | first install (with format) / update keeping data, with a progress bar |
+| `tools/apk_swap_entry.py` | replaces a file inside a system APK (e.g. a dex) with one of a different size, keeping the original APK Signing Block |
+| `tools/apk_graft_sig.py` | puts the original signing block on an APK rebuilt with apktool (to add resources) |
+| `tools/wallpaper_merge_s24u.py` | merges the S24 Ultra Infinity entries into `wallpaper-res`'s `resources_info.json` |
+| `patches/SecSettings-120hz.patch` | smali diff adding the 120 Hz "High" option to Motion smoothness |
+| `sepolicy/normal_install_enforcing.cil` | rules Samsung's system side needs under Enforcing |
 | `docs/` | banners and a photo of the device |
 
 The loader, `klee_fpfs`, the debug domain and the helper scripts are **development tools** and are
@@ -81,7 +94,7 @@ meant to be removed before any permanent install.
 
 <img src="docs/screenshots/boot-logo.jpg" alt="Poco X8 Pro showing the Samsung Galaxy boot logo" width="300">
 
-*The Poco X8 Pro booting the One UI DSU image (photo of the real device).*
+*The Poco X8 Pro booting One UI (photo of the real device).*
 
 ## Banners
 

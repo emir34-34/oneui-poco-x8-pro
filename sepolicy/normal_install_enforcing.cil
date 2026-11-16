@@ -1,0 +1,24 @@
+;; Normal install (Enforcing) fixes, o9-64. Appended to /system/etc/selinux/plat_sepolicy.cil.
+;; vold: shutdown flag + Samsung /data/sec, /metadata/sec_backup, dumplog; radio: OMC notification prop;
+;; dumpstate/system_server/init/apps: Samsung dumplog directory.
+; vold: sys.is_vold_shutdown at shutdown (else init logs "vold got SIGKILL abnormally"), /data/sec setup, /metadata/sec_backup key backup, /data/log
+(allow vold system_prop (property_service (set)))
+(allow vold sec_data_file (dir (getattr search read open write add_name remove_name create setattr rename reparent rmdir)))
+(allow vold sec_data_file (file (getattr read open write create unlink rename setattr)))
+(allow vold system_data_root_file (dir (write add_name remove_name rename reparent)))
+(allow vold metadata_file (dir (search write add_name create getattr setattr open read)))
+(allow vold metadata_file (file (create getattr setattr open read write rename unlink)))
+(allow vold dumplog_data_file (dir (search getattr write add_name open read)))
+(allow vold dumplog_data_file (file (create getattr open read write append setattr)))
+; radio: OMC notification flag; when denied com.android.phone crashes with a RuntimeException
+(allow radio system_prop (property_service (set)))
+; Samsung logs in /data/log (dumplog_data_file): dumpstate (else a SIGABRT loop), system_server LockSettings logs, Samsung apps
+(allow dumpstate dumplog_data_file (dir (search getattr read open)))
+(allow dumpstate dumplog_data_file (file (getattr read open)))
+(allow dumpstate packages_list_file (file (getattr read open)))
+(allow system_server dumplog_data_file (dir (search getattr read open write add_name remove_name create)))
+(allow system_server dumplog_data_file (file (create getattr read open write append rename unlink setattr)))
+(allow init dumplog_data_file (file (append open getattr write)))
+(allow system_app dumplog_data_file (dir (search getattr)))
+(allow platform_app dumplog_data_file (dir (search getattr)))
+(allow radio dumplog_data_file (dir (search getattr)))

@@ -1,38 +1,51 @@
-# Leaving DSU: plan for a normal install (2026-11-14)
+# Normal install (slot B, in place of Infinity X) — 2026-11-17
 
-Status: **preparation only**. Testing continues in DSU until the open issues are solved. Nothing
-here has been done on the phone.
+Status: **working, used as the author's daily phone** since 2026-11-16 (o9-63 → o9-65).
+SELinux is **Enforcing**. DSU is still used for trying new images first.
 
-## Partitions the phone mounts
-The first-stage `fstab.mt6899` (vendor_boot) mounts `system, system_ext, product, vendor, odm,
-vendor_dlkm, odm_dlkm, system_dlkm`, all `slotselect,logical`, none optional. In DSU the single
-image carries its own `/product` and `/system_ext`; a normal install needs three images:
-`tools/build_split.sh work/o9-N` → `split/{system,system_ext,product}.img`.
+## Layout
+One `super.img` built with `lpmake` (`tools/build_normal_super.sh work/o9-N`):
 
-## Space in `super` (12 GiB)
-
-| | MiB |
+| Partition (group `mediatek_dynamic_partitions_b`) | Source |
 |---|---|
-| One UI o9-48: system / system_ext / product | 4471 / 202 / 1514 = **6187** |
-| Infinity X slot B: system / system_ext / product | 924 / 1435 / 1854 = 4213 |
-| Infinity X slot B: vendor / odm / dlkm | 953 / 1146 / 26 |
-| Free space after slot B | ~5950 |
+| `system_b`, `system_ext_b`, `product_b` | One UI tree, split with `tools/build_split.sh` |
+| `vendor_b`, `odm_b`, `vendor_dlkm_b`, `odm_dlkm_b`, `system_dlkm_b` | copied 1:1 from the installed Infinity X slot B |
 
-- **Slot A:** One UI + its own vendor/odm copy needs ~8.3 GiB, so ~2.3 GiB short. The slot A
-  metadata on this phone also overlaps slot B's live extents, and `/data` is shared between slots.
-- **In place of Infinity X (slot B):** +1974 MiB, fits (super ~8.3 / 12 GiB). Needs a data format.
+`--device super:12884901888 --group mediatek_dynamic_partitions_b:9121562624 --virtual-ab
+--metadata-slots 3`. o9-65 uses 6541 + 2125 MiB of the 8699 MiB group, **33 MiB free**.
+Slot A is not used (One UI + a second vendor copy does not fit, and slot A's metadata overlaps
+slot B's extents on this phone).
 
-## Must be reverted for a normal install
-- PIN workarounds o9-30 / o9-31 (gatekeeper TA uid offset is DSU-only). They weaken PIN-bound
-  keys.
-- Development tools: module loader, root command runner, forced ADB, logger, `ro.debuggable=1`,
-  `ro.adb.secure=0`, permissive `oneuidbg` domain. The functional parts of the boot script
-  (audio/Bluetooth binds, `ril.ICC_TYPE`, fingerprint position, vendor RIL binds) need an enforcing
-  domain with their own rules.
-- AVB: DSU key → vbmeta with verification disabled, or own signing key.
+## Install (from the bootloader, not fastbootd)
+`tools/normal_kur_ilerleme.sh super_oneui_o9-N.img` — progress bar per step
+(`tools/fastboot_ilerleme.py`):
+1. `fastboot flash super super_oneui_o9-N.img`
+2. `fastboot --disable-verity --disable-verification flash vbmeta_b vbmeta_b.img` (the phone's own)
+3. **First install only:** `fastboot -w` **and** `fastboot erase metadata`. Without erasing
+   `/metadata` the old encryption keys stay and the first boot fails.
+4. `fastboot set_active b`, `fastboot reboot`
 
-## Release requirements
-- Works only on the Infinity X vendor (sepolicy 202604) it was built against.
-- Install: fastbootd → flash `system`, `system_ext`, `product` (+ vbmeta) → format data, or one
-  `super.img` built with `lpmake`.
-- No Samsung or Xiaomi files in this repository.
+**Updates keep data:** `tools/normal_guncelle_ilerleme.sh` writes only `super` + `vbmeta_b`.
+
+### First boot: leave it alone for a few minutes
+On the first attempt the phone was restarted about one minute after the first boot. User 0's
+device-encrypted data (`/data/user_de/0`, the lock-screen `spblob`) was gone afterwards, Rescue
+Party sent the phone to recovery. On the second attempt (format again, then waited 3+ minutes
+before the first restart) everything stayed. Root cause not proven; the rule is: finish setup,
+wait, then restart.
+
+## Enforcing fixes
+Samsung's system side needs rules that the Xiaomi vendor policy does not have:
+`sepolicy/normal_install_enforcing.cil` (vold shutdown flag and Samsung directories, radio OMC
+property, Samsung `/data/log`). Without them `com.android.phone` crashed and `dumpstate` looped.
+
+## Test before calling an image ready
+Reboot → unlock with the PIN/pattern → reboot again → unlock. Passed on o9-64 and o9-65.
+
+## Still open
+- The DSU-only PIN workarounds o9-30 / o9-31 are still in the image. In a normal install the
+  gatekeeper TA does not need them and they weaken PIN-bound keys; removing them needs a separate
+  test with a backup.
+- vold is still killed during shutdown, so `/data` is shut down with an F2FS full sync instead of
+  a clean unmount. No data loss seen.
+- Works only on the Infinity X vendor it was built against. No Samsung or Xiaomi files here.

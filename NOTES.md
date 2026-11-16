@@ -1,7 +1,8 @@
-# One UI 9 on klee — notes (2026-11-08 → 2026-11-14)
+# One UI 9 on klee — notes (2026-11-08 → 2026-11-17)
 
-A **DSU** image: the installed ROM (Infinity X, Android 17, slot `_b`) is never touched,
-and nothing is written outside `/data/gsi` and `/data/local/tmp`.
+Developed as a **DSU** image (the installed ROM is never touched). Since 2026-11-16 it also runs
+as a **normal install** in place of Infinity X on slot B, with SELinux Enforcing:
+see [docs/NORMAL_INSTALL.md](docs/NORMAL_INSTALL.md).
 
 ## Base
 
@@ -156,3 +157,35 @@ libraries, product name. Rule from now on: a live fix is only a test, the image 
 - ePDG / cidmanager crashes fixed with SELinux labels (o9-44); VoLTE itself does not work yet.
 - Gallery AI: S26U PhotoEditor libraries added; it then stops in `libPetDetector` (needs Samsung's
   `snap` HAL and models).
+
+## Since o9-56 (2026-11-16 → 2026-11-17)
+
+### Normal install (o9-63 → o9-65)
+Full `super.img` with the phone's own vendor, flashed from the bootloader; details, the first-boot
+rule and the open points are in [docs/NORMAL_INSTALL.md](docs/NORMAL_INSTALL.md). Enforcing needed
+`sepolicy/normal_install_enforcing.cil` (o9-64).
+
+### Changing a system APK without re-signing
+For packages on the system partition the package manager reads the certificate from the APK
+Signing Block but does not compare the content digests. So a file inside the APK can change, even
+its size, as long as the original signing block sits right before the central directory and the
+EOCD points to the new offset (`tools/apk_swap_entry.py`). The platform certificate,
+`sharedUserId` and the SELinux `seinfo` stay the same. To add new resources the APK is rebuilt
+with apktool, aligned, and the original block is put back (`tools/apk_graft_sig.py`).
+
+### 120 Hz (o9-63)
+Samsung Settings on the A06 offers only Adaptive and Standard. The fragment's read/write calls go
+through two small helpers: "High" stores `refresh_rate_mode` 1 plus `min_refresh_rate` 120,
+Adaptive/Standard reset the minimum to 0 (`patches/SecSettings-120hz.patch`).
+
+### Infinity video wallpapers (o9-65)
+`wallpaper-res` comes from the S26 Ultra (One UI 8.5 animated graphical wallpapers, e.g. the
+basketball court, served by `GraphicalWallpaperService`). Its S26U videos were replaced with the
+four Galaxy S24 Ultra Infinity videos and eight still images. The pack shrank from 852 MB to
+413 MB so it fits in `super`.
+
+Lesson: `InfinityWallpaper` does not just play the video. On unlock or touch it seeks back and
+forth to frame numbers (`newMotionAnimator 1206 700 1500`). Re-encoded videos must therefore be
+**all-intra** (x265 `keyint=1`) and keep the **original frame rate and frame count** (S24U:
+120 fps, 2953 frames). Videos encoded with a 60–90 frame GOP stuttered badly; all-intra at
+1272×2756 Main10 CRF 22 (~85–95 MB each) plays smoothly.

@@ -1,0 +1,209 @@
+--- a/smali_classes3/com/samsung/android/settings/display/HighRefreshRateFragment$$ExternalSyntheticLambda0.smali
++++ b/smali_classes3/com/samsung/android/settings/display/HighRefreshRateFragment$$ExternalSyntheticLambda0.smali
+@@ -30,7 +30,7 @@
+ 
+     const/16 v1, 0x3e7
+ 
+-    invoke-static {p1, v0, v1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->putIntRefreshRate(Landroid/content/Context;II)V
++    invoke-static {p1, v0, v1}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleePut(Landroid/content/Context;II)V
+ 
+     invoke-virtual {p0}, Lcom/android/settings/SettingsPreferenceFragment;->finish()V
+ 
+--- a/smali_classes3/com/samsung/android/settings/display/HighRefreshRateFragment$1.smali
++++ b/smali_classes3/com/samsung/android/settings/display/HighRefreshRateFragment$1.smali
+@@ -31,7 +31,7 @@
+ 
+     const/16 v1, 0x3e7
+ 
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {v0, v1}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result v0
+ 
+@@ -112,7 +112,7 @@
+ 
+     iget-object p1, p1, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContext:Landroid/content/Context;
+ 
+-    invoke-static {p1, v3, v1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->putIntRefreshRate(Landroid/content/Context;II)V
++    invoke-static {p1, v3, v1}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleePut(Landroid/content/Context;II)V
+ 
+     const-string p1, "HighRefreshRateFragment"
+ 
+--- a/smali_classes3/com/samsung/android/settings/display/HighRefreshRateFragment.smali
++++ b/smali_classes3/com/samsung/android/settings/display/HighRefreshRateFragment.smali
+@@ -31,6 +31,8 @@
+ 
+ .field public mPowerfulMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
+ 
++.field public mKleeHighMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++
+ .field public mSeamless:I
+ 
+ .field public mlayoutSecHrr:Landroid/view/View;
+@@ -173,7 +175,7 @@
+ 
+     const/16 v2, 0x3e7
+ 
+-    invoke-static {v1, v2}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {v1, v2}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result v1
+ 
+@@ -186,7 +188,7 @@
+     :cond_0
+     iget-object p0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContext:Landroid/content/Context;
+ 
+-    invoke-static {p0, v2}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {p0, v2}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result p0
+ 
+@@ -308,6 +310,21 @@
+ 
+     iput-object p0, v1, Lcom/samsung/android/settings/widget/SecRadioButtonPreference;->mListener:Lcom/samsung/android/settings/widget/SecRadioButtonPreference$OnClickListener;
+ 
++    const-string v1, "sec_high_refresh_rate_powerful_on"
++    invoke-virtual {p0, v1}, Lcom/android/settings/core/InstrumentedPreferenceFragment;->findPreference(Ljava/lang/CharSequence;)Landroidx/preference/Preference;
++    move-result-object v1
++    check-cast v1, Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++    if-eqz v1, :klee_nohigh
++    iget-object v3, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mPowerfulMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++    if-eq v1, v3, :klee_nohigh
++    iput-object v1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mKleeHighMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++    const/4 v3, 0x1
++    invoke-virtual {v1, v3}, Landroidx/preference/Preference;->setVisible(Z)V
++    iput-object p0, v1, Lcom/samsung/android/settings/widget/SecRadioButtonPreference;->mListener:Lcom/samsung/android/settings/widget/SecRadioButtonPreference$OnClickListener;
++    const-string v3, "120 Hz"
++    invoke-virtual {v1, v3}, Landroidx/preference/Preference;->setSummary(Ljava/lang/CharSequence;)V
++    :klee_nohigh
++
+     const-string v1, "sec_high_refresh_rate_standard_off"
+ 
+     invoke-virtual {p0, v1}, Lcom/android/settings/core/InstrumentedPreferenceFragment;->findPreference(Ljava/lang/CharSequence;)Landroidx/preference/Preference;
+@@ -793,7 +810,7 @@
+ 
+     const/16 v1, 0x3e7
+ 
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {v0, v1}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result v0
+ 
+@@ -830,7 +847,7 @@
+ 
+     const/16 v0, 0x3e7
+ 
+-    invoke-static {p1, v0}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {p1, v0}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result p1
+ 
+@@ -880,6 +897,15 @@
+ .method public final onRadioButtonClicked(Lcom/samsung/android/settings/widget/SecRadioButtonPreference;)V
+     .locals 4
+ 
++    iget-object v0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mKleeHighMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++    if-eqz v0, :klee_notclick
++    if-ne p1, v0, :klee_notclick
++    const/4 v0, 0x3
++    iput v0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mMode:I
++    invoke-virtual {p0}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->refreshUI$3()V
++    return-void
++    :klee_notclick
++
+     invoke-virtual {p0}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->getRefreshRateMode()I
+ 
+     move-result v0
+@@ -984,7 +1010,7 @@
+ 
+     const/16 v1, 0x3e7
+ 
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {v0, v1}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result v0
+ 
+@@ -1084,7 +1110,7 @@
+ 
+     iget-object v2, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContext:Landroid/content/Context;
+ 
+-    invoke-static {v2, v4, v1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->putIntRefreshRate(Landroid/content/Context;II)V
++    invoke-static {v2, v4, v1}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleePut(Landroid/content/Context;II)V
+ 
+     new-instance v1, Ljava/lang/StringBuilder;
+ 
+@@ -1252,7 +1278,7 @@
+ 
+     iget-object v1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContext:Landroid/content/Context;
+ 
+-    invoke-static {v1, v4}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {v1, v4}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result v1
+ 
+@@ -1428,7 +1454,7 @@
+ 
+     iget-object v6, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContext:Landroid/content/Context;
+ 
+-    invoke-static {v6, v4}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    invoke-static {v6, v4}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->kleeGet(Landroid/content/Context;I)I
+ 
+     move-result v6
+ 
+@@ -1479,6 +1505,13 @@
+     goto :goto_5
+ 
+     :cond_a
++    const/4 v8, 0x3
++    if-ne v1, v8, :klee_refresh
++    iget-object v8, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mKleeHighMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++    if-eqz v8, :klee_refresh
++    invoke-virtual {v8, v2}, Landroidx/preference/TwoStatePreference;->setChecked(Z)V
++    goto :goto_6
++    :klee_refresh
+     if-eqz v1, :cond_c
+ 
+     if-eq v1, v2, :cond_b
+@@ -1667,3 +1700,42 @@
+ 
+     return-void
+ .end method
++
++# klee (o9-63): "Yuksek" = refresh_rate_mode 1 + System.min_refresh_rate 120 (sabit 120 Hz). Ic mod degeri 3.
++.method public static kleeGet(Landroid/content/Context;I)I
++    .locals 4
++    invoke-static {p0, p1}, Lcom/samsung/android/settings/display/SecDisplayUtils;->getIntRefreshRate(Landroid/content/Context;I)I
++    move-result v0
++    if-eqz v0, :cond_k0
++    invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    move-result-object v1
++    const-string v2, "min_refresh_rate"
++    const/4 v3, 0x0
++    invoke-static {v1, v2, v3}, Landroid/provider/Settings$System;->getFloat(Landroid/content/ContentResolver;Ljava/lang/String;F)F
++    move-result v1
++    const/high16 v2, 0x42f00000    # 120.0f
++    cmpl-float v1, v1, v2
++    if-ltz v1, :cond_k0
++    const/4 v0, 0x3
++    :cond_k0
++    return v0
++.end method
++
++.method public static kleePut(Landroid/content/Context;II)V
++    .locals 4
++    invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    move-result-object v0
++    const-string v1, "min_refresh_rate"
++    const/4 v2, 0x3
++    if-ne p1, v2, :cond_k1
++    const/high16 v3, 0x42f00000    # 120.0f
++    invoke-static {v0, v1, v3}, Landroid/provider/Settings$System;->putFloat(Landroid/content/ContentResolver;Ljava/lang/String;F)Z
++    const/4 p1, 0x1
++    goto :goto_k1
++    :cond_k1
++    const/4 v3, 0x0
++    invoke-static {v0, v1, v3}, Landroid/provider/Settings$System;->putFloat(Landroid/content/ContentResolver;Ljava/lang/String;F)Z
++    :goto_k1
++    invoke-static {p0, p1, p2}, Lcom/samsung/android/settings/display/SecDisplayUtils;->putIntRefreshRate(Landroid/content/Context;II)V
++    return-void
++.end method
