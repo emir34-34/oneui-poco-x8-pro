@@ -46,7 +46,9 @@ need to download the firmware yourself.
 | Galaxy S24 Ultra Infinity video wallpapers, One UI 8.5 animated graphical wallpapers | ✅ |
 | KleeToys camera-ring LED, S26 Ultra sound themes | ✅ |
 | 5G | 🟡 option shown, network stays on LTE (NR restricted) |
-| VoLTE / VoWiFi, MMS | ❌ |
+| VoLTE | 🟡 HD+ VoLTE calls worked as DSU; on the normal install (Enforcing) `imsd` can't create its socket and may crash-loop, then VoLTE doesn't register. When it works, the VoLTE icon shows in the quick panel |
+| MMS | ✅ send/receive |
+| VoWiFi | ❔ untested |
 | Theme Store, Gallery AI editing | ❌ |
 
 How each fix works is in **[NOTES.md](NOTES.md)**.
@@ -73,7 +75,7 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 - Tested on slot B. Slot A uses the same image plus a 1 MiB metadata patch
   ([`tools/make_slot_meta_patch.py`](tools/make_slot_meta_patch.py)) and is **untested**.
 - Known bugs: fingerprint as first unlock after reboot (see above), Bluetooth audio routing, Samsung
-  IMS (`imsd`) crash loop (no VoLTE), Play Integrity BASIC only, DSU PIN workarounds still inside,
+  IMS (`imsd`) crash loop on some boots (VoLTE may not register), Play Integrity BASIC only, DSU PIN workarounds still inside,
   shutdown not fully clean.
 - **Debug build on purpose:** ADB is on from the first boot with **no authorization prompt**
   (`ro.adb.secure=0`, `ro.debuggable=1`), so testers can pull logs and debug from minute one. It also
