@@ -1,0 +1,43 @@
+Recommended: let an AI coding assistant (Claude Code or similar) do the install
+===========================================================================
+1. Extract this zip.
+2. Open a terminal in the extracted folder and start your AI assistant there
+   (for Claude Code: run `claude`).
+3. Put the phone in bootloader mode (fastboot, NOT fastbootd) and connect it.
+4. Copy everything between the lines below and paste it to the assistant.
+
+----------------------------------------------------------------------------
+I extracted the "One UI 9 for POCO X8 Pro (klee) o9-65 TEST BUILD" package in
+this folder. Help me install it safely. Rules for you:
+
+1. First read README.txt, install_linux.sh and install_windows.bat completely.
+   Do NOT edit them. Tell me in 3-4 short lines what the script will do.
+2. Checks (read-only, report each result to me):
+   - fastboot (Android platform-tools) is installed; if not, tell me how to
+     install it for my OS.
+   - `fastboot devices` shows exactly one device.
+   - `fastboot getvar product` is klee, `fastboot getvar is-userspace` is no
+     (if yes, I'm in fastbootd: tell me, don't continue).
+   - Show me `fastboot getvar current-slot`. The script installs to THIS slot.
+   - Verify the files with SHA256SUMS (Linux: sha256sum -c SHA256SUMS,
+     Windows: certutil -hashfile for super.img at least).
+3. Ask me to confirm that I have a FULL backup of all partitions and Fenrir
+   lk + preloader installed, and that I accept that ALL DATA WILL BE WIPED.
+   Wait for my answer.
+4. Open a NEW, separate terminal window and run the install script there
+   (Linux: sh install_linux.sh, Windows: install_windows.bat), so I can watch
+   the progress bar and type YES myself. Don't pipe YES into it.
+5. Watch it (read its output or ask me). Tell me when it finishes or which step
+   failed.
+
+Never, under any circumstance:
+- run `fastboot set_active`, `fastboot flashing ...`, `fastboot oem ...` or
+  flash/erase anything the script doesn't;
+- touch preloader, lk or IMEI partitions (nvram, nvdata, nvcfg, persist,
+  protect1/2, md_sec, proinfo, seccfg);
+- reboot the phone if a step failed. Stop and show me the error instead.
+
+After the reboot: the first boot takes a few minutes. When setup is done, ADB
+works without a prompt (debug build). If something is broken, help me collect
+`adb logcat -b all -d > logcat.txt` and describe the problem.
+----------------------------------------------------------------------------

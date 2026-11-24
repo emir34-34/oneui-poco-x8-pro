@@ -55,11 +55,14 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 
 **Not for daily use.** For testers who can read logcat, ideally with an AI coding assistant.
 
-- Download (Google Drive, 7.1 GB): **DRIVE_LINK**
-  SHA-256 `478f591aa25a25b46b63a721868e2e5669e45676e34426572b95ec692e3a34bf`
+- Download (Google Drive, 7.1 GB): *link coming soon*
+  SHA-256 `a5813e3d14e956c83571fee611f494a524a60d8e07d394fff8c9f6f279bb0bdd`
 - The zip holds `super.img` (One UI + Infinity X 4.1 vendor), Infinity X 4.1 kernel/boot images and
   firmware, and the scripts in [`release/`](release/). It is hosted outside this repository because
   it contains Samsung and Xiaomi software.
+- **Recommended:** let an AI coding assistant (Claude Code etc.) guide the install: open it in the
+  extracted folder and paste [`release/AI_INSTALL_PROMPT.txt`](release/AI_INSTALL_PROMPT.txt). It runs
+  the checks, then starts the installer in a separate terminal with a progress bar; you type YES yourself.
 - Requirements: Fenrir lk + preloader, a **full backup of all partitions**, platform-tools.
   Never flash or erase IMEI partitions (nvram, nvdata, nvcfg, persist, protect1/2, md_sec, proinfo,
   seccfg).

@@ -19,6 +19,10 @@ Requirements
   protect1/2, md_sec, proinfo, seccfg
 
 Install (wipes userdata + metadata)
+Recommended: let an AI assistant (Claude Code etc.) guide the install.
+Open AI_INSTALL_PROMPT.txt and follow it.
+
+Manual:
 1. Reboot to the bootloader (fastboot mode, NOT fastbootd).
 2. Linux: sh install_linux.sh     Windows: install_windows.bat
 3. Type YES when asked.
@@ -39,7 +43,10 @@ Known bugs
 - Bluetooth audio routing: audio may stay on the speaker.
 - Samsung IMS (imsd) crash loop, VoLTE/IMS not working properly.
 - Play Integrity: BASIC only, DEVICE fails.
-- Debug build: developer settings and DSU PIN workarounds still inside.
+- DSU PIN workarounds still inside.
+- Debug build ON PURPOSE: ADB is on from the first boot with NO authorization
+  prompt (ro.adb.secure=0, ro.debuggable=1). Anyone with a USB cable can access
+  the phone. Don't keep personal data on it.
 - Shutdown is not fully clean (no data loss seen).
 
 Reporting bugs: steps + logcat (adb logcat -b all -d > log.txt).

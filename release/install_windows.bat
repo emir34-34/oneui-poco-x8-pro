@@ -2,7 +2,7 @@
 rem One UI 9 for POCO X8 Pro (klee) - o9-65 TEST BUILD - clean install (WIPES DATA)
 rem Writes to the CURRENT active slot only. Never runs set_active. Never touches
 rem preloader, lk or IMEI partitions.
-setlocal
+setlocal enabledelayedexpansion
 cd /d "%~dp0"
 where fastboot >nul 2>&1 || (echo fastboot not found. Install Android platform-tools and add it to PATH. & pause & exit /b 1)
 
@@ -25,14 +25,28 @@ echo Make sure you have a full backup of all partitions and Fenrir lk + preloade
 set /p OK=Type YES to continue:
 if not "%OK%"=="YES" (echo Cancelled. & pause & exit /b 0)
 
+set N=0
+set TOTAL=29
+if "%SLOT%"=="a" set TOTAL=30
 for %%p in (apusys audio_dsp ccu connsys_bt connsys_gnss connsys_wifi dpm gpueb gz mcupm modem mvpu_algo pi_img scp spmfw sspm tee vcp boot init_boot vendor_boot dtbo vbmeta_system vbmeta_vendor) do (
+  set /a N+=1
+  echo. & echo ===== Step !N! / !TOTAL! : %%p_%SLOT% =====
   fastboot flash %%p_%SLOT% images\%%p.img || goto fail
 )
+set /a N+=1 & echo. & echo ===== Step !N! / !TOTAL! : vbmeta_%SLOT% =====
 fastboot --disable-verity --disable-verification flash vbmeta_%SLOT% images\vbmeta.img || goto fail
+set /a N+=1 & echo. & echo ===== Step !N! / !TOTAL! : super (big, takes a few minutes) =====
 fastboot flash super images\super.img || goto fail
-if "%SLOT%"=="a" (fastboot flash super images\super_slot_a_meta.img || goto fail)
+if "%SLOT%"=="a" (
+  set /a N+=1
+  echo. & echo ===== Step !N! / !TOTAL! : super slot A metadata =====
+  fastboot flash super images\super_slot_a_meta.img || goto fail
+)
+set /a N+=1 & echo. & echo ===== Step !N! / !TOTAL! : erase metadata =====
 fastboot erase metadata || goto fail
+set /a N+=1 & echo. & echo ===== Step !N! / !TOTAL! : wipe userdata =====
 fastboot -w || goto fail
+echo. & echo ===== Step !TOTAL! / !TOTAL! : rebooting =====
 fastboot reboot
 echo.
 echo Done. First boot takes a few minutes. Finish setup and wait 3+ minutes before the first reboot.
