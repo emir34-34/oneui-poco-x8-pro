@@ -69,8 +69,11 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 - Tested on slot B. Slot A uses the same image plus a 1 MiB metadata patch
   ([`tools/make_slot_meta_patch.py`](tools/make_slot_meta_patch.py)) and is **untested**.
 - Known bugs: fingerprint as first unlock after reboot (see above), Bluetooth audio routing, Samsung
-  IMS (`imsd`) crash loop (no VoLTE), Play Integrity BASIC only, debug build (developer settings and
-  DSU PIN workarounds inside), shutdown not fully clean.
+  IMS (`imsd`) crash loop (no VoLTE), Play Integrity BASIC only, DSU PIN workarounds still inside,
+  shutdown not fully clean.
+- **Debug build on purpose:** ADB is on from the first boot with **no authorization prompt**
+  (`ro.adb.secure=0`, `ro.debuggable=1`), so testers can pull logs and debug from minute one. It also
+  means anyone with a USB cable can access the phone: don't keep personal data on it.
 - Bug reports: steps + `adb logcat -b all -d`. Developers who can fix bugs: contact me on Telegram.
 
 ## Base
