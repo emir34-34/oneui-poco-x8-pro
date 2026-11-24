@@ -57,7 +57,7 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 
 **Not for daily use.** For testers who can read logcat, ideally with an AI coding assistant.
 
-- Download (Google Drive, 7.1 GB): *link coming soon*
+- Download (Google Drive, 7.1 GB): [OneUI9_klee_o9-65.zip](https://drive.google.com/file/d/18U6E5-WRtPNT_ugbIPVrYL3aTzbEen29/view?usp=sharing)
   SHA-256 `a5813e3d14e956c83571fee611f494a524a60d8e07d394fff8c9f6f279bb0bdd`
 - The zip holds `super.img` (One UI + Infinity X 4.1 vendor), Infinity X 4.1 kernel/boot images and
   firmware, and the scripts in [`release/`](release/). It is hosted outside this repository because
