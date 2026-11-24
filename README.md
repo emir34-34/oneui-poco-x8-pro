@@ -39,7 +39,8 @@ need to download the firmware yourself.
 | Flashlight with strength levels | ✅ |
 | Xiaomi camera (photos saved) | ✅ |
 | Bluetooth audio (A2DP offload) | 🟡 plays, but a tester reports audio routing back to the speaker |
-| SIM, mobile data, SMS in/out, incoming/outgoing calls | ✅ incoming calls arrive late (open) |
+| SIM, mobile data, SMS in/out | ✅ |
+| Voice calls (outgoing and incoming) | 🟡 partial: calls connect with two-way audio, but incoming calls can arrive late |
 | Lock screen / AOD clock on a clean install | ✅ |
 | 120 Hz option in Motion smoothness | ✅ added "High" (fixed 120 Hz) next to Adaptive/Standard |
 | Galaxy S24 Ultra Infinity video wallpapers, One UI 8.5 animated graphical wallpapers | ✅ |
