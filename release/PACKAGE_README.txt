@@ -50,7 +50,7 @@ Known bugs
 - Shutdown is not fully clean (no data loss seen).
 
 Reporting bugs: steps + logcat (adb logcat -b all -d > log.txt).
-Can you fix bugs? DM the author on Telegram.
+Can you fix bugs? DM me on Telegram: @Pearto_tech
 
 Source, tools & notes: https://github.com/emir34-34/oneui-poco-x8-pro
 

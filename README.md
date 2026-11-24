@@ -80,7 +80,9 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 - **Debug build on purpose:** ADB is on from the first boot with **no authorization prompt**
   (`ro.adb.secure=0`, `ro.debuggable=1`), so testers can pull logs and debug from minute one. It also
   means anyone with a USB cable can access the phone: don't keep personal data on it.
-- Bug reports: steps + `adb logcat -b all -d`. Developers who can fix bugs: contact me on Telegram.
+- Bug reports: [open an issue](https://github.com/emir34-34/oneui-poco-x8-pro/issues/new?template=bug_report.yml)
+  (topic, severity, screenshots, logcat) or DM me on Telegram. Developers who can fix bugs are very welcome.
+- Contact: Telegram [@Pearto_tech](https://t.me/Pearto_tech) · Instagram [@pearto_tech](https://instagram.com/pearto_tech)
 
 ## Base
 
