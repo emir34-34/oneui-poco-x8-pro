@@ -128,12 +128,18 @@ meant to be removed before any permanent install.
 
 ## Banners
 
-The banner at the top was made with ChatGPT from the photo of the real device. Two
-alternatives, free to use for posts about the project:
+The banner at the top (`docs/banner.png`, One UI 9 test build) was made with ChatGPT from the photo
+of the real device. Free to use for posts about the project.
 
-| `docs/banner2.jpg` (Gemini) | `docs/banner3.png` (hand-made from the photo) |
-|---|---|
-| ![Banner 2](docs/banner2.jpg) | ![Banner 3](docs/banner3.png) |
+![Banner](docs/banner.png)
+
+### Outdated banners
+
+From the One UI 8.5 / DSU days, kept for history.
+
+| `docs/banner_old.png` (ChatGPT) | `docs/banner2.jpg` (Gemini) | `docs/banner3.png` (hand-made from the photo) |
+|---|---|---|
+| ![Old banner](docs/banner_old.png) | ![Banner 2](docs/banner2.jpg) | ![Banner 3](docs/banner3.png) |
 
 ## Credits
 
