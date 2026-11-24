@@ -5,7 +5,7 @@ NOT FOR DAILY USE. Experimental port, for testing only. It has bugs.
 Best for people who can use adb/logcat, ideally with an AI coding assistant.
 
 What it is
-- One UI 9 (Galaxy A06 SM-A066B base + some S26 Ultra parts), Android 16
+- One UI 9 (Galaxy A06 SM-A066B base + some S26 Ultra parts), Android 17
 - Kernel, vendor and firmware from Infinity X 4.1 (18.10.2026), SELinux Enforcing
 - Installs to the CURRENT active slot. The scripts never switch slots.
 - Tested on slot B only. Slot A uses the same image plus a 1 MiB partition-table

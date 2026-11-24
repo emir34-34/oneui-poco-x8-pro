@@ -56,7 +56,7 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 **Not for daily use.** For testers who can read logcat, ideally with an AI coding assistant.
 
 - Download (Google Drive, 7.1 GB): **DRIVE_LINK**
-  SHA-256 `3df5cd558dde9e4a0be99c8b0ca52e325c53cfed4f4da005e6f1888f9b76b0d2`
+  SHA-256 `478f591aa25a25b46b63a721868e2e5669e45676e34426572b95ec692e3a34bf`
 - The zip holds `super.img` (One UI + Infinity X 4.1 vendor), Infinity X 4.1 kernel/boot images and
   firmware, and the scripts in [`release/`](release/). It is hosted outside this repository because
   it contains Samsung and Xiaomi software.
