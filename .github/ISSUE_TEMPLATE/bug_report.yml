@@ -1,0 +1,74 @@
+name: Bug report (test build)
+description: Something broken in the One UI 9 test build for POCO X8 Pro
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing! Screenshots: paste or drag them into the boxes below.
+        **Everything here is public.** Don't post personal data (phone number, IMEI, account names) in logs or screenshots.
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options:
+        - Boot / install
+        - Lock screen / fingerprint / PIN
+        - Calls / SMS / mobile data / VoLTE
+        - Wi-Fi / Bluetooth / audio
+        - Camera
+        - Display / UI / animations
+        - Battery / charging / performance
+        - Samsung apps / Galaxy AI
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - "Critical: doesn't boot, data loss, bootloop"
+        - "High: a main feature is broken (calls, unlock, Wi-Fi...)"
+        - "Medium: works with a workaround"
+        - "Low: cosmetic / small annoyance"
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build and slot
+      placeholder: "o9-65, slot a"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / video
+      description: Paste or drag images here.
+  - type: textarea
+    id: logcat
+    attributes:
+      label: Logcat
+      description: "`adb logcat -b all -d > logcat.txt`, then drag the file here (better than pasting)."
+  - type: input
+    id: contact
+    attributes:
+      label: Telegram contact (optional, PUBLIC)
+      description: Only if you want the developer to contact you. This is visible to everyone; a @username is safer than a phone number.
