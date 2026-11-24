@@ -7,9 +7,9 @@ mt6899), on top of the phone's own Xiaomi vendor. The system is booted as a **DS
 Update) image, so the installed ROM and `/data` are never touched. If a test boot fails, the phone
 falls back to the normal ROM by itself.
 
-> **Status (2026-11-17): runs as a normal install (slot B, SELinux Enforcing) and is the author's
-> daily phone since 2026-11-16. New images are still tried as DSU first.** Not a release: some
-> features are missing, see the table.
+> **Status (2026-11-24): public TEST build o9-65 is out — not for daily use.** Download and install
+> steps: [Test release](#test-release-o9-65). Ran as the author's daily phone (normal install, slot B,
+> SELinux Enforcing) from 2026-11-16. Some features are missing or buggy, see the table.
 > Sister project: [Ubuntu Touch for the Poco X8 Pro](https://github.com/emir34-34/ubuntu-touch-poco-x8-pro).
 
 ## Disclaimer
@@ -30,7 +30,7 @@ need to download the firmware yourself.
 | Boot, Galaxy S26 Ultra lock screen and notification panel, ADB | ✅ |
 | Boot time | ✅ screen at ~50–63 s |
 | Normal install in place of Infinity X (slot B), SELinux Enforcing | ✅ data kept on updates, see [docs/NORMAL_INSTALL.md](docs/NORMAL_INSTALL.md) |
-| PIN / pattern lock | ✅ (DSU workaround still in the image, see notes) |
+| PIN / pattern lock | 🟡 after a reboot unlock with PIN/pattern first: fingerprint can dismiss the lock screen while storage stays locked |
 | In-display fingerprint (enrol, unlock), LockStar animation | ✅ |
 | Always On Display | ✅ |
 | Wi-Fi, Google and Samsung sign-in | ✅ |
@@ -38,7 +38,7 @@ need to download the firmware yourself.
 | Adaptive brightness | ✅ under-display light sensor works |
 | Flashlight with strength levels | ✅ |
 | Xiaomi camera (photos saved) | ✅ |
-| Bluetooth audio (A2DP offload) | ✅ |
+| Bluetooth audio (A2DP offload) | 🟡 plays, but a tester reports audio routing back to the speaker |
 | SIM, mobile data, SMS in/out, incoming/outgoing calls | ✅ incoming calls arrive late (open) |
 | Lock screen / AOD clock on a clean install | ✅ |
 | 120 Hz option in Motion smoothness | ✅ added "High" (fixed 120 Hz) next to Adaptive/Standard |
@@ -49,6 +49,29 @@ need to download the firmware yourself.
 | Theme Store, Gallery AI editing | ❌ |
 
 How each fix works is in **[NOTES.md](NOTES.md)**.
+
+## Test release (o9-65)
+
+**Not for daily use.** For testers who can read logcat, ideally with an AI coding assistant.
+
+- Download (Google Drive, 7.1 GB): **DRIVE_LINK**
+  SHA-256 `3df5cd558dde9e4a0be99c8b0ca52e325c53cfed4f4da005e6f1888f9b76b0d2`
+- The zip holds `super.img` (One UI + Infinity X 4.1 vendor), Infinity X 4.1 kernel/boot images and
+  firmware, and the scripts in [`release/`](release/). It is hosted outside this repository because
+  it contains Samsung and Xiaomi software.
+- Requirements: Fenrir lk + preloader, a **full backup of all partitions**, platform-tools.
+  Never flash or erase IMEI partitions (nvram, nvdata, nvcfg, persist, protect1/2, md_sec, proinfo,
+  seccfg).
+- [`release/install_linux.sh`](release/install_linux.sh) / [`install_windows.bat`](release/install_windows.bat)
+  flash the **current active slot** and never run `set_active` (switching to a slot whose preloader
+  does not boot drops this phone to BROM). Userdata and metadata are wiped. Preloader and lk are
+  not written.
+- Tested on slot B. Slot A uses the same image plus a 1 MiB metadata patch
+  ([`tools/make_slot_meta_patch.py`](tools/make_slot_meta_patch.py)) and is **untested**.
+- Known bugs: fingerprint as first unlock after reboot (see above), Bluetooth audio routing, Samsung
+  IMS (`imsd`) crash loop (no VoLTE), Play Integrity BASIC only, debug build (developer settings and
+  DSU PIN workarounds inside), shutdown not fully clean.
+- Bug reports: steps + `adb logcat -b all -d`. Developers who can fix bugs: contact me on Telegram.
 
 ## Base
 
@@ -85,6 +108,9 @@ How each fix works is in **[NOTES.md](NOTES.md)**.
 | `tools/wallpaper_merge_s24u.py` | merges the S24 Ultra Infinity entries into `wallpaper-res`'s `resources_info.json` |
 | `patches/SecSettings-120hz.patch` | smali diff adding the 120 Hz "High" option to Motion smoothness |
 | `sepolicy/normal_install_enforcing.cil` | rules Samsung's system side needs under Enforcing |
+| `release/` | install scripts and README of the public test package (active slot, no `set_active`) |
+| `tools/make_slot_meta_patch.py` | sparse patch that rewrites only super's LP metadata for slot A |
+| `tools/payload_extract.py` | minimal `payload.bin` extractor (stock `init_boot`/`vbmeta` from the Infinity X OTA) |
 | `docs/` | banners and a photo of the device |
 
 The loader, `klee_fpfs`, the debug domain and the helper scripts are **development tools** and are

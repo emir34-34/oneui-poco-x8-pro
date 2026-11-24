@@ -1,6 +1,6 @@
 # Normal install (slot B, in place of Infinity X) — 2026-11-17
 
-Status: **working, used as the author's daily phone** since 2026-11-16 (o9-63 → o9-65).
+Status: **working**, the author's daily phone 2026-11-16 → 2026-11-20 (o9-63 → o9-65); o9-65 released as a public test build.
 SELinux is **Enforcing**. DSU is still used for trying new images first.
 
 ## Layout
@@ -41,6 +41,15 @@ property, Samsung `/data/log`). Without them `com.android.phone` crashed and `du
 
 ## Test before calling an image ready
 Reboot → unlock with the PIN/pattern → reboot again → unlock. Passed on o9-64 and o9-65.
+
+## Public test package (2026-11-24)
+`release/` scripts, package built in `work/release_o9-65`:
+- `super.img` = the installed o9-65 (slot B names). For slot A the script also flashes
+  `super_slot_a_meta.img`: lpmake output for `_a` and `_b` differs only in the first MiB, so a
+  sparse image with that MiB as RAW and the rest DONT_CARE switches the metadata. Slot A untested.
+- boot, vendor_boot, dtbo and firmware (apusys … vcp) are the ones o9-65 was tested with;
+  init_boot and vbmeta* are stock from the Infinity X 4.1 payload.
+- Writes only the active slot, no `set_active`, no preloader/lk/IMEI partitions.
 
 ## Still open
 - The DSU-only PIN workarounds o9-30 / o9-31 are still in the image. In a normal install the
