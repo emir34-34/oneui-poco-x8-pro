@@ -5,6 +5,8 @@
     <string-array name="scope">
         <item>android</item>
         <item>com.android.systemui</item>
+        <item>com.miui.home</item>
+        <item>com.mi.android.globallauncher</item>
         <item>com.sec.android.app.launcher</item>
     </string-array>
 </resources>

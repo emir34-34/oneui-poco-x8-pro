@@ -2,7 +2,7 @@
 # Kullanım: gesture_fullscreen.sh [apply|revert|status]
 # Hareket çubuğunu (gesture hint) gizler, uygulamalar ekranın en altına kadar çizilir; alt kenara basılı
 # tutunca Circle to Search (ve onun yerine geçen asistan) açılmaz. Kaydırma hareketleri çalışmaya devam eder.
-# Root gerekmez: adb shell "settings" kullanır, ayarlar /data'da kalır (yeniden başlatmada silinmez).
+# HyperOS 4 ve One UI portunda çalışır. Root gerekmez: adb shell "settings" kullanır, ayarlar /data'da kalır (yeniden başlatmada silinmez).
 S=${ADB_SERIAL:+-s $ADB_SERIAL}
 A="adb $S shell"
 case "${1:-apply}" in
@@ -12,6 +12,9 @@ apply)
     # (gesture inset) uygulamalara bırakır: içerik çubuğun durduğu yere kadar uzanır.
     settings put global navigation_bar_gesture_while_hidden 1
     settings put global navigation_bar_gesture_hint 0
+    # HyperOS: tam ekran hareketleri (1) + hareket çizgisini gizle (1)
+    settings put global force_fsg_nav_bar 1
+    settings put global hide_gesture_line 1
     # Circle to Search: alt kenara / tutamağa basılı tutma ve ana sayfaya basılı tutma girişleri kapalı.
     settings put secure search_press_hold_nav_handle_enabled 0
     settings put secure search_long_press_home_enabled 0
@@ -22,6 +25,7 @@ apply)
 revert)
   $A '
     settings put global navigation_bar_gesture_hint 1
+    settings put global hide_gesture_line 0
     settings put secure search_press_hold_nav_handle_enabled 1
     settings put secure search_long_press_home_enabled 1
     settings put secure assist_long_press_home_enabled 1
@@ -32,10 +36,10 @@ status) ;;
 esac
 # Durum: ilgili tüm anahtarlar + gerçek alt boşluk (navigationBars / mandatorySystemGestures inset).
 $A '
-  for k in navigation_bar_gesture_while_hidden navigation_bar_gesture_hint; do echo "global $k=$(settings get global $k)"; done
+  for k in navigation_bar_gesture_while_hidden navigation_bar_gesture_hint force_fsg_nav_bar hide_gesture_line; do echo "global $k=$(settings get global $k)"; done
   for k in navigation_mode search_press_hold_nav_handle_enabled search_long_press_home_enabled assist_long_press_home_enabled; do
     echo "secure $k=$(settings get secure $k)"; done
   echo "-- diger navigation/search anahtarlari:"
-  { settings list global; settings list secure; } | grep -iE "navigation_bar|navigationbar|circle|contextual|search_.*(press|entry)" | sort -u
+  { settings list global; settings list secure; } | grep -iE "navigation_bar|navigationbar|gesture|fsg|circle|contextual|search_.*(press|entry)" | sort -u
   echo "-- WindowManager inset (navigationBars yuksekligi 0 olmali):"
   dumpsys window | grep -iE "navigationBars|NavigationBar.*frame" | head -6'

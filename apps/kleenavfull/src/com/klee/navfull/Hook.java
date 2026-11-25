@@ -34,7 +34,9 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
  * com.android.systemui: the gesture handle (id home_handle) is not drawn; Samsung's
  *   "gesture hint" is turned off and the long-press search/assistant settings are set to 0;
  *   assistant calls coming from a nav handle / home long-press are dropped.
- * com.sec.android.app.launcher: ContextualSearchManager calls from the nav handle are dropped.
+ * launcher (com.miui.home, POCO Launcher, One UI Home): ContextualSearchManager calls from the
+ *   nav handle are dropped.
+ * Works on HyperOS (hide_gesture_line / force_fsg_nav_bar) and One UI (Samsung keys).
  */
 public class Hook implements IXposedHookLoadPackage {
     private static final String TAG = "KleeNavFull: ";
@@ -58,7 +60,8 @@ public class Hook implements IXposedHookLoadPackage {
                     hookSettingsWrite();
                 }
                 break;
-            default: // launcher
+            default: // launcher (HyperOS'ta tutamak launcher penceresinde de olabilir)
+                hookHandle();
                 hookCtsClient(lp.classLoader);
                 break;
         }
@@ -70,8 +73,9 @@ public class Hook implements IXposedHookLoadPackage {
 
     private static boolean readGestural(ContentResolver cr) {
         int aosp = Settings.Secure.getInt(cr, "navigation_mode", -1);
-        int sec = Settings.Global.getInt(cr, "navigation_bar_gesture_while_hidden", -1);
-        return aosp == 2 || sec == 1;
+        int sec = Settings.Global.getInt(cr, "navigation_bar_gesture_while_hidden", -1); // Samsung
+        int mi = Settings.Global.getInt(cr, "force_fsg_nav_bar", -1); // HyperOS/MIUI tam ekran hareketleri
+        return aosp == 2 || sec == 1 || mi == 1;
     }
 
     private void hookInsets(ClassLoader cl) {
@@ -94,6 +98,7 @@ public class Hook implements IXposedHookLoadPackage {
                                 };
                                 cr.registerContentObserver(Settings.Secure.getUriFor("navigation_mode"), false, o);
                                 cr.registerContentObserver(Settings.Global.getUriFor("navigation_bar_gesture_while_hidden"), false, o);
+                                cr.registerContentObserver(Settings.Global.getUriFor("force_fsg_nav_bar"), false, o);
                                 o.onChange(false);
                             });
                         }
@@ -174,7 +179,7 @@ public class Hook implements IXposedHookLoadPackage {
         XposedHelpers.findAndHookMethod(View.class, "onAttachedToWindow", new XC_MethodHook() {
             @Override protected void afterHookedMethod(MethodHookParam p) {
                 View v = (View) p.thisObject;
-                if (sHandleId == -1) sHandleId = v.getResources().getIdentifier("home_handle", "id", "com.android.systemui");
+                if (sHandleId == -1) sHandleId = v.getResources().getIdentifier("home_handle", "id", v.getContext().getPackageName());
                 if (sHandleId == 0 || v.getId() != sHandleId) return;
                 hideHandle(v);
             }
@@ -241,7 +246,8 @@ public class Hook implements IXposedHookLoadPackage {
             @Override protected void afterHookedMethod(MethodHookParam p) {
                 ContentResolver cr = ((Application) p.thisObject).getContentResolver();
                 try {
-                    Settings.Global.putInt(cr, "navigation_bar_gesture_hint", 0);
+                    Settings.Global.putInt(cr, "hide_gesture_line", 1);            // HyperOS: hareket çizgisini gizle
+                    Settings.Global.putInt(cr, "navigation_bar_gesture_hint", 0);  // One UI karşılığı
                     Settings.Secure.putInt(cr, "search_press_hold_nav_handle_enabled", 0);
                     Settings.Secure.putInt(cr, "search_long_press_home_enabled", 0);
                     Settings.Secure.putInt(cr, "assist_long_press_home_enabled", 0);
