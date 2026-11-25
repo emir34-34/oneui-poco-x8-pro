@@ -189,3 +189,11 @@ forth to frame numbers (`newMotionAnimator 1206 700 1500`). Re-encoded videos mu
 **all-intra** (x265 `keyint=1`) and keep the **original frame rate and frame count** (S24U:
 120 fps, 2953 frames). Videos encoded with a 60–90 frame GOP stuttered badly; all-intra at
 1272×2756 Main10 CRF 22 (~85–95 MB each) plays smoothly.
+
+### Full-screen gestures, no gesture bar
+`tools/gesture_fullscreen.sh apply` (over ADB, no root) sets Samsung's swipe-gesture mode with the
+gesture hint off (`global navigation_bar_gesture_hint 0`), so apps draw down to the bottom edge
+where the bar was. Long-press on the bottom edge does nothing: the Circle to Search entry points
+(`secure search_press_hold_nav_handle_enabled`, `search_long_press_home_enabled`) and the
+long-press assistant fallback (`assist_long_press_home_enabled`) are set to 0. `revert` undoes it,
+`status` prints the keys and the navigation-bar inset from `dumpsys window`.
