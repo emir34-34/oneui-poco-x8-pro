@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.klee.boost" android:versionCode="1" android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="33" android:targetSdkVersion="35" />
+    <application android:label="KleeBoost" android:icon="@android:drawable/ic_lock_silent_mode_off"
+        android:theme="@android:style/Theme.DeviceDefault.DayNight">
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="Medya sesini %100'un üstüne çıkarır (varsayılan %150), LoudnessEnhancer ile, system_server içinden." />
+        <meta-data android:name="xposedminversion" android:value="93" />
+        <meta-data android:name="xposedsharedprefs" android:value="true" />
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
