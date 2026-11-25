@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Klee NavFull</string>
+    <string name="desc">Hareket çubuğunu gizler, ekranın en altını uygulamalara açar, alt kenara basılı tutunca Circle to Search açılmaz.</string>
+    <string-array name="scope">
+        <item>android</item>
+        <item>com.android.systemui</item>
+        <item>com.sec.android.app.launcher</item>
+    </string-array>
+</resources>
