@@ -8,7 +8,7 @@ rm -rf build; mkdir -p build/res build/stubs build/classes build/apk
 $BT/aapt2 compile --dir res -o build/res
 $BT/aapt2 link -o build/base.apk --manifest AndroidManifest.xml -I $AJ -A assets build/res/*.flat
 javac --release 11 -cp $AJ -d build/stubs $(find stubs -name '*.java')
-javac --release 11 -Xlint:-options -cp $AJ:build/stubs -d build/classes $(find src -name '*.java')
+javac -encoding UTF-8 --release 11 -Xlint:-options -cp $AJ:build/stubs -d build/classes $(find src -name '*.java')
 $BT/d8 --min-api 33 --lib $AJ --classpath build/stubs --output build/apk $(find build/classes -name '*.class')
 cp build/base.apk build/unsigned.apk
 python3 - <<'PY'

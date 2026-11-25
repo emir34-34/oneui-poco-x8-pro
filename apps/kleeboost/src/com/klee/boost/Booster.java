@@ -25,8 +25,10 @@ import java.util.Set;
 
 /**
  * system_server icinde calisir. Her calan oynaticinin (AudioTrack, MediaPlayer, ExoPlayer,
- * AAudio/OpenSL) ses oturumuna bir LoudnessEnhancer takar. Boylece %100 ses seviyesinin
- * ustune, sinirlayicili (clip yapmayan) ek kazanc gelir: %150 = +3.5 dB.
+ * AAudio/OpenSL) ses oturumuna bir LoudnessEnhancer takar.
+ *
+ * Kazanc, sistemin muzik ses cubuguna baglidir (Hook cubugu uzatir): cubuk %100 ve altindayken
+ * kazanc 0, %100 ile en ust (%150) arasinda dogrusal olarak artar. %150 = +3.5 dB, sinirlayicili.
  *
  * system_server MODIFY_AUDIO_ROUTING iznine sahip oldugu icin AudioPlaybackCallback ona
  * gercek oturum kimliklerini verir (normal uygulamalar anonimlestirilmis liste alir).
@@ -47,9 +49,8 @@ final class Booster {
     private final Set<Integer> failed = new HashSet<>();
 
     private boolean enabled;
-    private int gainMb;
+    private int percent;
     private boolean headphones;
-    private boolean allUsages;
 
     private Method getSessionId;
     private Method getPlayerState;
@@ -103,8 +104,20 @@ final class Booster {
             }
         }, new IntentFilter(Prefs.ACTION_RELOAD), null, handler, Context.RECEIVER_EXPORTED);
 
+        // Ses tusu / ses paneli: muzik seviyesi degisince kazanci guncelle.
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context c, Intent i) {
+                if (i.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1)
+                        != AudioManager.STREAM_MUSIC) return;
+                apply(audio.getActivePlaybackConfigurations());
+            }
+        }, new IntentFilter("android.media.VOLUME_CHANGED_ACTION"), null, handler,
+                Context.RECEIVER_NOT_EXPORTED);
+
         apply(audio.getActivePlaybackConfigurations());
-        XposedBridge.log(TAG + "hazir, enabled=" + enabled + " gain=" + gainMb + "mB");
+        XposedBridge.log(TAG + "hazir, enabled=" + enabled + " en_ust=%" + percent
+                + " cubuk=" + Hook.origMaxSteps + "->" + Hook.newMaxSteps);
     }
 
     private void loadPrefs() {
@@ -112,17 +125,30 @@ final class Booster {
         enabled = prefs.getBoolean(Prefs.ENABLED, Prefs.DEF_ENABLED);
         int pct = prefs.getInt(Prefs.PERCENT, Prefs.DEF_PERCENT);
         pct = Math.max(Prefs.MIN_PERCENT, Math.min(Prefs.MAX_PERCENT, pct));
-        gainMb = Prefs.percentToMb(pct);
+        percent = pct;
         headphones = prefs.getBoolean(Prefs.HEADPHONES, Prefs.DEF_HEADPHONES);
-        allUsages = prefs.getBoolean(Prefs.ALL_USAGES, Prefs.DEF_ALL_USAGES);
         failed.clear();
     }
 
+    /** Su anki muzik seviyesine gore kazanc (milibel). */
+    private int currentGainMb() {
+        int orig = Hook.origMaxSteps, top = Hook.newMaxSteps;
+        if (orig <= 0 || top <= orig) {
+            // Cubuk uzatilamadiysa (bilinmeyen ROM): sabit kazanc.
+            return Prefs.percentToMb(percent);
+        }
+        int idx = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+        if (idx <= orig) return 0;
+        double frac = Math.min(1.0, (idx - orig) / (double) (top - orig));
+        return Prefs.percentToMb((int) Math.round(100 + (percent - 100) * frac));
+    }
+
     private void apply(List<AudioPlaybackConfiguration> configs) {
-        if (!enabled || gainMb <= 0) {
+        if (!enabled || percent <= 100) {
             releaseAll();
             return;
         }
+        int gainMb = currentGainMb();
 
         // Bir oturumda birden fazla oynatici olabilir: biri uygunsa efekt acik.
         Map<Integer, Boolean> wanted = new HashMap<>();
@@ -131,7 +157,7 @@ final class Booster {
             int session = intCall(getSessionId, c, 0);
             if (session <= 0) continue; // 0 = cikis karisimi, dokunma
             if (intCall(getPlayerState, c, -1) == 0 /* RELEASED */) continue;
-            boolean ok = usageAllowed(c.getAudioAttributes()) && routeAllowed(c, headsetConnected);
+            boolean ok = gainMb > 0 && usageAllowed(c.getAudioAttributes()) && routeAllowed(c, headsetConnected);
             Boolean prev = wanted.get(session);
             wanted.put(session, ok || (prev != null && prev));
         }
@@ -171,9 +197,8 @@ final class Booster {
         }
     }
 
-    /** Varsayilan: sadece medya, oyun ve bilinmeyen kullanim. Bildirim, zil, arama haric. */
+    /** Muzik cubugunu izleyen sesler: medya, oyun, bilinmeyen. Bildirim, zil, arama haric. */
     private boolean usageAllowed(AudioAttributes aa) {
-        if (allUsages) return true;
         if (aa == null) return true;
         int u = aa.getUsage();
         return u == AudioAttributes.USAGE_MEDIA

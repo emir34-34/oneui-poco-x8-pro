@@ -61,6 +61,10 @@ public class MainActivity extends Activity {
         level.setTextSize(18);
         level.setGravity(Gravity.CENTER_HORIZONTAL);
         level.setPadding(0, dp(24), 0, dp(4));
+        TextView barTitle = new TextView(this);
+        barTitle.setText("Ses çubuğunun en üstü");
+        barTitle.setPadding(0, dp(24), 0, 0);
+        root.addView(barTitle);
         root.addView(level);
 
         SeekBar bar = new SeekBar(this);
@@ -86,16 +90,12 @@ public class MainActivity extends Activity {
         hp.setPadding(0, dp(24), 0, 0);
         root.addView(hp);
 
-        Switch all = new Switch(this);
-        all.setText("Tüm sesler (bildirim, zil, arama dahil)");
-        all.setChecked(prefs.getBoolean(Prefs.ALL_USAGES, Prefs.DEF_ALL_USAGES));
-        all.setOnCheckedChangeListener((v, on) -> save(Prefs.ALL_USAGES, on));
-        all.setPadding(0, dp(12), 0, 0);
-        root.addView(all);
-
         TextView note = new TextView(this);
-        note.setText("Sistem ses seviyesi %100'deyken bu kazanç üstüne eklenir. Sınırlayıcı "
-                + "sayesinde ses patlamaz, ama çok yüksek değerlerde dinamik aralık azalır.");
+        note.setText("Medya ses çubuğu (ses tuşları, ses paneli, Ayarlar > Ses) %100'ü geçip bu "
+                + "değere kadar uzar. Eski en üst nokta artık %100; üstündeki her adım sesi "
+                + "biraz daha yükseltir. Çubuğun uzunluğu yeniden başlatınca değişir, "
+                + "en üstteki kazanç hemen. Sınırlayıcı sayesinde ses patlamaz.\n\n"
+                + "Kulaklık seçeneği kapalıyken kulaklıkta %100'ün üstü %100 gibi davranır.");
         note.setPadding(0, dp(24), 0, 0);
         note.setAlpha(0.7f);
         root.addView(note);

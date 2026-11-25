@@ -7,14 +7,12 @@ final class Prefs {
     static final String ACTION_RELOAD = "com.klee.boost.RELOAD";
 
     static final String ENABLED = "enabled";
-    static final String PERCENT = "percent";        // 100..300, %100 = degisiklik yok
+    static final String PERCENT = "percent";        // ses cubugunun en ustu, 100..300
     static final String HEADPHONES = "headphones";  // kulaklik / Bluetooth'ta da uygula
-    static final String ALL_USAGES = "all_usages";  // bildirim, zil, arama dahil her ses
 
     static final boolean DEF_ENABLED = true;
     static final int DEF_PERCENT = 150;
     static final boolean DEF_HEADPHONES = false;
-    static final boolean DEF_ALL_USAGES = false;
 
     static final int MIN_PERCENT = 100;
     static final int MAX_PERCENT = 300;
